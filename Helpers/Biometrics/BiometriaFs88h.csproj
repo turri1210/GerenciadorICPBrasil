@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseWindowsForms>true</UseWindowsForms>
+    <FutronicSdkPath Condition="'$(FutronicSdkPath)' == ''">$(MSBuildThisFileDirectory)..\..\vendor\futronic</FutronicSdkPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(FutronicSdkPath)\ftrScanAPI.dll" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(FutronicSdkPath)\FTRAPI.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ftrSDKHelper13">
+      <HintPath>$(FutronicSdkPath)\ftrSDKHelper13.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Examples\**" />
+    <EmbeddedResource Remove="Examples\**" />
+    <None Remove="Examples\**" />
+    <Compile Remove="SDK 4.2\Examples\**" />
+    <EmbeddedResource Remove="SDK 4.2\Examples\**" />
+    <None Remove="SDK 4.2\Examples\**" />
+    <None Remove="SDK 4.2\Bin\**" />
+  </ItemGroup>
+
+  <Target Name="ValidateFutronicSdk" BeforeTargets="ResolveReferences"
+          Condition="!Exists('$(FutronicSdkPath)\ftrSDKHelper13.dll')">
+    <Error Text="SDK Futronic não encontrado. Defina FutronicSdkPath ou coloque as DLLs licenciadas em vendor\futronic." />
+  </Target>
+
+</Project>

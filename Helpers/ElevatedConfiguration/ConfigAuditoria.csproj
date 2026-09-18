@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>img\RedeIcpBrasil.ico</ApplicationIcon>
+    <Product>Assistente ICP</Product>
+    <AssemblyTitle>Assistente ICP — Configuração elevada</AssemblyTitle>
+    <Description>Executor administrativo integrado ao Assistente ICP.</Description>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="System.DirectoryServices.AccountManagement" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Services\SecurityPolicy.cs" Link="Security\SecurityPolicy.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="img\RedeIcpBrasil.png" />
+    <Resource Include="img\RedeIcpBrasil.ico" />
+  </ItemGroup>
+
+</Project>

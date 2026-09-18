@@ -1,0 +1,129 @@
+<Window x:Class="ConfigAuditoria.Views.NewUserDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Novo usuario"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        SizeToContent="WidthAndHeight"
+        WindowStyle="SingleBorderWindow"
+        ShowInTaskbar="False">
+    <Border BorderBrush="#D1D5DB"
+            BorderThickness="1"
+            Padding="16"
+            Background="White">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0"
+                        Margin="0,0,0,16">
+                <TextBlock x:Name="DialogTitleText"
+                           Text="Novo usuario"
+                           FontSize="18"
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,4"/>
+                <TextBlock x:Name="DialogSubtitleText"
+                           Text="Informe os dados do novo usuario."
+                           Foreground="#4B5563"/>
+            </StackPanel>
+
+            <Grid Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="250"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="Nome de usuario:"
+                           VerticalAlignment="Center"/>
+                <TextBox x:Name="UserNameTextBox"
+                         Grid.Column="1"
+                         Margin="0,0,0,8"/>
+
+                <TextBlock Text="Nome completo:"
+                           Grid.Row="1"
+                           VerticalAlignment="Center"/>
+                <TextBox x:Name="FullNameTextBox"
+                         Grid.Row="1"
+                         Grid.Column="1"
+                         Margin="0,0,0,8"/>
+
+                <TextBlock Text="Descricao:"
+                           Grid.Row="2"
+                           VerticalAlignment="Center"/>
+                <TextBox x:Name="DescriptionTextBox"
+                         Grid.Row="2"
+                         Grid.Column="1"
+                         Margin="0,0,0,12"/>
+
+                <TextBlock Text="Senha:"
+                           Grid.Row="3"
+                           VerticalAlignment="Center"/>
+                <PasswordBox x:Name="PasswordBox"
+                             Grid.Row="3"
+                             Grid.Column="1"
+                             Margin="0,0,0,8"/>
+
+                <TextBlock Text="Confirmar senha:"
+                           Grid.Row="4"
+                           VerticalAlignment="Center"/>
+                <PasswordBox x:Name="ConfirmPasswordBox"
+                             Grid.Row="4"
+                             Grid.Column="1"
+                             Margin="0,0,0,12"/>
+
+                <StackPanel Grid.Row="5"
+                            Grid.ColumnSpan="2"
+                            Orientation="Vertical"
+                            Margin="0,0,0,4">
+                    <CheckBox x:Name="MustChangePasswordCheckBox"
+                              Content="O usuario deve alterar a senha no proximo logon"
+                              IsChecked="True"
+                              Margin="0,0,0,4"/>
+                    <CheckBox x:Name="CannotChangePasswordCheckBox"
+                              Content="O usuario nao pode alterar a senha"
+                              Margin="0,0,0,4"/>
+                    <CheckBox x:Name="PasswordNeverExpiresCheckBox"
+                              Content="A senha nunca expira"
+                              Margin="0,0,0,4"/>
+                    <CheckBox x:Name="AccountDisabledCheckBox"
+                              Content="Conta desativada"/>
+                </StackPanel>
+
+                <TextBlock x:Name="InfoTextBlock"
+                           Grid.Row="6"
+                           Grid.ColumnSpan="2"
+                           Foreground="#2563EB"
+                           Margin="0,12,0,0"
+                           TextWrapping="Wrap"/>
+            </Grid>
+
+            <StackPanel Grid.Row="2"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Margin="0,16,0,0">
+                <Button Content="Criar"
+                        Width="80"
+                        Margin="0,0,8,0"
+                        IsDefault="True"
+                        Click="OnCreateClick"/>
+                <Button Content="Fechar"
+                        Width="80"
+                        IsCancel="True"
+                        Click="OnCloseClick"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

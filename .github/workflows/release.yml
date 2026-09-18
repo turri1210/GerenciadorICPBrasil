@@ -1,0 +1,121 @@
+name: Release assinada
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  sign-and-release:
+    if: vars.SIGNPATH_ENABLED == 'true'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar versão da tag
+        id: version
+        shell: pwsh
+        run: |
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Use tags no formato v1.2.3.' }
+          "value=$version" >> $env:GITHUB_OUTPUT
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.425
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Testar
+        shell: pwsh
+        run: |
+          dotnet restore AssistenteICP.sln --locked-mode
+          dotnet run --project tests/SecurityPolicyChecks/SecurityPolicyChecks.csproj -c Release
+
+      - name: Gerar aplicativo não assinado
+        shell: pwsh
+        run: ./scripts/build-release.ps1 -Version '${{ steps.version.outputs.value }}'
+
+      - name: Validar metadados
+        shell: pwsh
+        run: ./scripts/verify-release.ps1 -Version '${{ steps.version.outputs.value }}' -ArtifactDirectory artifacts/app-unsigned
+
+      - name: Enviar aplicativo para verificação de origem
+        id: upload-app
+        uses: actions/upload-artifact@v7
+        with:
+          name: app-unsigned
+          path: artifacts/app-unsigned/**
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Solicitar assinatura do aplicativo
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+          organization-id: '${{ vars.SIGNPATH_ORGANIZATION_ID }}'
+          project-slug: '${{ vars.SIGNPATH_PROJECT_SLUG }}'
+          signing-policy-slug: '${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}'
+          artifact-configuration-slug: '${{ vars.SIGNPATH_APP_ARTIFACT_CONFIG_SLUG }}'
+          github-artifact-id: '${{ steps.upload-app.outputs.artifact-id }}'
+          wait-for-completion: true
+          output-artifact-directory: artifacts/app-signed
+          parameters: |
+            version: ${{ steps.version.outputs.value }}
+
+      - name: Validar aplicativo assinado
+        shell: pwsh
+        run: ./scripts/verify-release.ps1 -Version '${{ steps.version.outputs.value }}' -ArtifactDirectory artifacts/app-signed -RequireSignature
+
+      - name: Instalar Inno Setup fixado
+        shell: pwsh
+        run: choco install innosetup --version=6.4.3 --yes --no-progress
+
+      - name: Compilar instalador
+        shell: pwsh
+        run: |
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          $source = (Resolve-Path artifacts/app-signed).Path
+          $output = Join-Path $PWD 'artifacts\installer-unsigned'
+          New-Item -ItemType Directory -Force -Path $output | Out-Null
+          & $iscc "/DAppVersion=${{ steps.version.outputs.value }}" "/DSourceDir=$source" "/DOutputDir=$output" installer/GerenciadorICPBrasil.iss
+          if ($LASTEXITCODE -ne 0) { throw 'Falha ao compilar o instalador.' }
+
+      - name: Enviar instalador para verificação de origem
+        id: upload-installer
+        uses: actions/upload-artifact@v7
+        with:
+          name: installer-unsigned
+          path: artifacts/installer-unsigned/*.exe
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Solicitar assinatura do instalador
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+          organization-id: '${{ vars.SIGNPATH_ORGANIZATION_ID }}'
+          project-slug: '${{ vars.SIGNPATH_PROJECT_SLUG }}'
+          signing-policy-slug: '${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}'
+          artifact-configuration-slug: '${{ vars.SIGNPATH_INSTALLER_ARTIFACT_CONFIG_SLUG }}'
+          github-artifact-id: '${{ steps.upload-installer.outputs.artifact-id }}'
+          wait-for-completion: true
+          output-artifact-directory: artifacts/installer-signed
+          parameters: |
+            version: ${{ steps.version.outputs.value }}
+
+      - name: Validar e publicar release
+        shell: pwsh
+        env:
+          GH_TOKEN: '${{ github.token }}'
+        run: |
+          $installer = Get-ChildItem artifacts/installer-signed -Recurse -File -Filter '*.exe' | Select-Object -First 1
+          if (-not $installer) { throw 'Instalador assinado não encontrado.' }
+          $signature = Get-AuthenticodeSignature -LiteralPath $installer.FullName
+          if ($signature.Status -ne 'Valid') { throw "Assinatura inválida: $($signature.Status)" }
+          $hash = (Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash
+          "$hash  $($installer.Name)" | Set-Content artifacts/SHA256SUMS.txt
+          gh release create '${{ github.ref_name }}' $installer.FullName artifacts/SHA256SUMS.txt --verify-tag --generate-notes

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "GerenciadorIcpBrasil (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "GerenciadorIcpBrasil (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

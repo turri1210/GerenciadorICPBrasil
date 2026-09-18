@@ -1,0 +1,185 @@
+{
+  "updatedAt": "2026-02-13T00:00:00.000Z",
+  "links": [
+    {
+      "title": "Portal Rede ICP Brasil",
+      "description": "Página principal com noticias, informações e suporte.",
+      "url": "https://sistema.redeicpbrasil.com.br",
+      "category": "Rede ICP Brasil"
+    },
+    {
+      "title": "GAR Admin",
+      "description": "Sistema para habilitação de máquinas (apenas para ARs)",
+      "url": "https://gestaoar.certisign.com.br/GarAdmin",
+      "category": "Certisign"
+    },
+    {
+      "title": "Alô Parceiro Web",
+      "description": "Abertura de chamados",
+      "url": "https://csgnddnp.atlassian.net/servicedesk/customer/portals",
+      "category": "Certisign"
+    },
+    {
+      "title": "Universidade da Rede",
+      "description": "Cursos e treinamentos",
+      "url": "https://universidadecertisign.edusense.app/",
+      "category": "Certisign"
+    },
+    {
+      "title": "Portal da Rede",
+      "description": "Planilha financeira (ARs)",
+      "url": "https://autenticador.certisign.com.br/aucweb/",
+      "category": "Certisign"
+    },
+    {
+      "title": "AENET",
+      "description": "Solicitação de estoque, Inventário de estoque, CAR e Liberação de pagamento",
+      "url": "https://aenet.certisign.com.br/sc9_prod/app/aenet_ar/login_ar_certificado_new_respo/",
+      "category": "Certisign"
+    },
+    {
+      "title": "Agendamento Online",
+      "description": "Configuração da agenda",
+      "url": "https://gestaoar.certisign.com.br/AgendamentoOnLine/administrador/actionLogin!login.action",
+      "category": "Certisign"
+    },
+    {
+      "title": "Certisign Videoconferência",
+      "description": "Plataforma de atendimento por videoconferência",
+      "url": "https://certisign.omotor.com.br/",
+      "category": "Certisign"
+    },
+    {
+      "title": "Certibio",
+      "description": "Coleta e conferência biométrica",
+      "url": "https://kitweb.certibio.com.br/login",
+      "category": "Certisign"
+    },
+    {
+      "title": "GAR",
+      "description": "Emissão de certificados digitais",
+      "url": "https://gestaoar.certisign.com.br/ARMultipla/adm/autenticacao/inicio",
+      "category": "Certisign"
+    },
+    {
+      "title": "Correção do Biometric",
+      "description": "Abra em caso de Erro de comunicação com a leitora",
+      "url": "https://localhost:65468/swagger/ui/index",
+      "category": "Certisign"
+    },
+    {
+      "title": "Entrega de mídia avulsa",
+      "description": "Quando o cliente faz a compra de mídia separada do certificado",
+      "url": "https://checkout.certisign.com.br/posto/faces/pages/invoke/login.xhtml?faces-redirect=true",
+      "category": "Certisign"
+    },
+    {
+      "title": "Remote ID Admin",
+      "description": "Página de administração do Remote ID",
+      "url": "https://remoteidcertisign.com.br/admin/#/login",
+      "category": "Certisign"
+    },
+    {
+      "title": "Remote ID Manager",
+      "description": "Página de preparação do Remote ID",
+      "url": "https://remoteidcertisign.com.br/manager/#/login",
+      "category": "Certisign"
+    },
+    {
+      "title": "Validador 3.0",
+      "description": "Emissão de certificados digitais",
+      "url": "https://certisign.sydle.one/login/",
+      "category": "Certisign"
+    },
+    {
+      "title": "Solicitação de Voucher",
+      "description": "Solicitação de voucher para correção de dados no pedido",
+      "url": "https://certisign.my.site.com/NaoAutenticadoCertisign/s/flow/ScreenFlowFormularioCase?TipoAtendimento=Voucher_AR",
+      "category": "Certisign"
+    },
+    {
+      "title": "Formulário Suporte AR",
+      "description": "Formulário para solicitação de suporte",
+      "url": "https://certisign.my.site.com/NaoAutenticadoCertisign/s/flow/ScreenFlowFormularioCase?TipoAtendimento=Suporte_AR",
+      "category": "Certisign"
+    },
+    {
+      "title": "Tabela de Documentos da RFB",
+      "description": "Tabela de referência de documentos necessários para cada tipo de CNPJ",
+      "url": "https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/cadastros/cnpj/tabelas-utilizadas-pelo-programa-cnpj/tabela-de-documentos",
+      "category": "Consultas"
+    },
+    {
+      "title": "Acert ID",
+      "description": "Conferência de RG",
+      "url": "https://acertid.net.br/acertid/index.asp",
+      "category": "Consultas"
+    },
+    {
+      "title": "Senatran",
+      "description": "Conferência de CNH",
+      "url": "https://portalservicos.senatran.serpro.gov.br/#/login",
+      "category": "Consultas"
+    },
+    {
+      "title": "Consulta CPF",
+      "description": "Consulta da situação do CPF",
+      "url": "https://servicos.receita.fazenda.gov.br/Servicos/CPF/ConsultaSituacao/ConsultaPublica.asp",
+      "category": "Consultas"
+    },
+    {
+      "title": "Consulta CNPJ",
+      "description": "Emissão do cartão CNPJ",
+      "url": "http://servicos.receita.fazenda.gov.br/Servicos/cnpjreva/Cnpjreva_Solicitacao.asp",
+      "category": "Consultas"
+    },
+    {
+      "title": "Consulta OAB",
+      "description": "Consulta do cadastro na OAB",
+      "url": "https://cna.oab.org.br/",
+      "category": "Consultas"
+    },
+    {
+      "title": "Consulta CFM",
+      "description": "Consulta do cadastro no CFM",
+      "url": "https://portal.cfm.org.br/",
+      "category": "Consultas"
+    },
+    {
+      "title": "Consulta CEI",
+      "description": "Consulta do CEI",
+      "url": "http://ceiweb.receita.fazenda.gov.br/ceiweb/index.view",
+      "category": "Consultas"
+    },
+    {
+      "title": "Consulta CAEPF",
+      "description": "Consulta do CAEPF",
+      "url": "https://publico-caepf.receita.fazenda.gov.br/caepf-main/#/rfb/situacaoCadastral",
+      "category": "Consultas"
+    },
+    {
+      "title": "Consulta PIS",
+      "description": "Consulta do PIS",
+      "url": "https://consultacadastral.inss.gov.br/Esocial/pages/qualificacao/qualificar.xhtml",
+      "category": "Consultas"
+    },
+    {
+      "title": "CAR",
+      "description": "Lista do Cadastro de Agente de Registro",
+      "url": "https://www.gov.br/iti/pt-br/assuntos/cadastro-de-agente-de-registro-car/car",
+      "category": "Consultas"
+    },
+    {
+      "title": "Link de emissão",
+      "description": "Link de emissão de certificados caso o programa de emissão esteja com problema",
+      "url": "https://gestaoar.certisign.com.br/GestaoAR/cliente/emissao/00000000",
+      "category": "Auxiliar"
+    },
+    {
+      "title": "Desbloqueio de mídia",
+      "description": "Instruções para desbloqueio de mídia",
+      "url": "https://www.certisign.com.br/duvidas-suporte/desbloqueio-de-senhas",
+      "category": "Auxiliar"
+    }
+  ]
+}

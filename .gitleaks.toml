@@ -1,0 +1,10 @@
+title = "Assistente ICP secret scanning"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Artefatos locais e saídas de compilação não versionados"
+paths = [
+  '''(^|/)(\.git|artifacts|bin|obj|obj-[^/]*)(/|$)''',
+]

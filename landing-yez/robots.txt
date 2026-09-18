@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://yez.digital/assistente-icp/sitemap.xml

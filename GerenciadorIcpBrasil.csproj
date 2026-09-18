@@ -1,0 +1,104 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+        <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+        <OutputType>WinExe</OutputType>
+        <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
+
+        <AssemblyTitle>Assistente ICP</AssemblyTitle>
+        <Product>Assistente ICP</Product>
+        <Description>Assistente para preparação e verificação de estações Windows que utilizam certificados digitais.</Description>
+
+        <!-- WinUI 3 -->
+        <UseWinUI>true</UseWinUI>
+        <WindowsPackageType>None</WindowsPackageType>
+
+        <!-- Project Options -->
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <RootNamespace>GerenciadorIcpBrasil</RootNamespace>
+
+        <!-- App Options -->
+        <UseRidGraph>true</UseRidGraph>
+        <Platforms>x86;x64;ARM64</Platforms>
+        <ApplicationManifest Condition="'$(Configuration)'=='Debug'">app.debug.manifest</ApplicationManifest>
+        <ApplicationManifest Condition="'$(Configuration)'!='Debug'">app.manifest</ApplicationManifest>
+        <RuntimeIdentifiers Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 8">win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+        <RuntimeIdentifiers Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) &lt; 8">win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+        <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+        <SelfContained>true</SelfContained>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <PlatformTarget>x64</PlatformTarget>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="Assets\SplashScreen.scale-200.png" />
+        <Content Include="Assets\LockScreenLogo.scale-200.png" />
+        <Content Include="Assets\Square150x150Logo.scale-200.png" />
+        <Content Include="Assets\Square44x44Logo.scale-200.png" />
+        <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+        <Content Include="Assets\StoreLogo.png" />
+        <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+        <Content Include="Assets\icon.png">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="Assets\icon.ico">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="links-uteis.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="app-version.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Helpers are separate executables built by scripts/build-release.ps1. -->
+        <Compile Remove="Helpers\**\*.cs" />
+        <Page Remove="Helpers\**\*.xaml" />
+        <ApplicationDefinition Remove="Helpers\**\*.xaml" />
+        <EmbeddedResource Remove="Helpers\**\*" />
+        <Content Remove="Helpers\**\*" />
+        <PRIResource Remove="Helpers\**\*" />
+        <None Remove="Helpers\**\*" />
+
+        <!-- Keep archived WPF projects out of the WinUI build pipeline. -->
+        <Compile Remove="Legado/**/*.cs" />
+        <Page Remove="Legado/**/*.xaml" />
+        <ApplicationDefinition Remove="Legado/**/*.xaml" />
+        <EmbeddedResource Remove="Legado/**/*" />
+        <None Remove="Legado/**/*" />
+
+        <!-- Exclude validation projects and their generated artifacts from the app. -->
+        <Compile Remove="tests\**\*.cs" />
+        <EmbeddedResource Remove="tests\**\*" />
+        <None Remove="tests\**\*" />
+
+        <!-- Custom intermediate folders from builds are generated code, never app source. -->
+        <Compile Remove="obj-*\**\*.cs" />
+        <EmbeddedResource Remove="obj-*\**\*" />
+        <None Remove="obj-*\**\*" />
+        <Compile Remove="obj\**\*.cs" />
+        <EmbeddedResource Remove="obj\**\*" />
+        <None Remove="obj\**\*" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260804001" />
+        <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+        <PackageReference Include="System.Management" Version="8.0.0" />
+        <PackageReference Include="System.DirectoryServices.AccountManagement" Version="7.0.0" />
+
+        <Manifest Include="$(ApplicationManifest)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+</Project>

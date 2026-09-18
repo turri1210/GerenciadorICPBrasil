@@ -1,0 +1,63 @@
+# Builds .NET e Visual Studio
+**/bin/
+**/obj/
+obj-*/
+.vs/
+*.user
+*.suo
+*.pdb
+
+# Builds JavaScript/Electron
+**/node_modules/
+**/dist/
+**/out/
+
+# Pacotes e artefatos
+AppPackages/
+artifacts/
+BundleArtifacts/
+store-payload/
+example-packages/
+installer/dist/
+*.exe
+*.dll
+*.msi
+*.msix
+*.msixupload
+*.appx
+*.appxbundle
+*.zip
+*.rar
+
+# Certificados, chaves e segredos
+certs/
+*.pfx
+*.p12
+*.pem
+*.key
+*.snk
+.env
+.env.*
+!.env.example
+
+# SDKs e drivers proprietários opcionais
+vendor/
+**/drivers/
+landing-yez/files/
+
+# Estado local e temporários
+.dotnet/
+.cache/
+*.log
+*.tmp
+*.bak
+temp*
+auditpol_*
+bitlocker_gp*.html
+google.html
+ospassphrase.html
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+Desktop.ini

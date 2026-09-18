@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GerenciadorIcpBrasil", "GerenciadorIcpBrasil.csproj", "{E5E82CB6-8720-4A9E-8A4C-6C6B3C09FB10}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Helpers", "Helpers", "{1C2830FE-3E23-49D3-BC80-DE93062C8BD1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CertSelector", "Helpers\CertificateSelector\CertSelector.csproj", "{EFF65AE8-21C2-43FE-808F-B7C313C6ECA6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigAuditoria", "Helpers\ElevatedConfiguration\ConfigAuditoria.csproj", "{5CDF5BC6-FED4-4FC9-9E22-DAA0508967F4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6154FFF8-43B8-4D04-90CE-F67A887C9A54}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityPolicyChecks", "tests\SecurityPolicyChecks\SecurityPolicyChecks.csproj", "{803AB39A-6F59-4B46-8066-0F88EE1EFC72}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E5E82CB6-8720-4A9E-8A4C-6C6B3C09FB10}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{E5E82CB6-8720-4A9E-8A4C-6C6B3C09FB10}.Debug|Any CPU.Build.0 = Debug|x86
+		{E5E82CB6-8720-4A9E-8A4C-6C6B3C09FB10}.Release|Any CPU.ActiveCfg = Release|x86
+		{E5E82CB6-8720-4A9E-8A4C-6C6B3C09FB10}.Release|Any CPU.Build.0 = Release|x86
+		{EFF65AE8-21C2-43FE-808F-B7C313C6ECA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFF65AE8-21C2-43FE-808F-B7C313C6ECA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFF65AE8-21C2-43FE-808F-B7C313C6ECA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFF65AE8-21C2-43FE-808F-B7C313C6ECA6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CDF5BC6-FED4-4FC9-9E22-DAA0508967F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CDF5BC6-FED4-4FC9-9E22-DAA0508967F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CDF5BC6-FED4-4FC9-9E22-DAA0508967F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CDF5BC6-FED4-4FC9-9E22-DAA0508967F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{803AB39A-6F59-4B46-8066-0F88EE1EFC72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{803AB39A-6F59-4B46-8066-0F88EE1EFC72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{803AB39A-6F59-4B46-8066-0F88EE1EFC72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{803AB39A-6F59-4B46-8066-0F88EE1EFC72}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EFF65AE8-21C2-43FE-808F-B7C313C6ECA6} = {1C2830FE-3E23-49D3-BC80-DE93062C8BD1}
+		{5CDF5BC6-FED4-4FC9-9E22-DAA0508967F4} = {1C2830FE-3E23-49D3-BC80-DE93062C8BD1}
+		{803AB39A-6F59-4B46-8066-0F88EE1EFC72} = {6154FFF8-43B8-4D04-90CE-F67A887C9A54}
+	EndGlobalSection
+EndGlobal

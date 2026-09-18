@@ -1,0 +1,14 @@
+O Assistente ICP é um projeto de código aberto para preparação e verificação de estações Windows que utilizam certificados digitais.
+
+Privacidade
+- O aplicativo não transmite telemetria, hostname, endereço MAC, arquivos de licença, chaves privadas, PINs ou senhas.
+- Eventos técnicos de instalação e funcionamento são mantidos somente no computador para diagnóstico local.
+- O backup da licença biométrica é opcional, permanece no computador e é protegido para o usuário atual pelo mecanismo de proteção de dados do Windows.
+
+Alterações no computador
+- Ações administrativas são executadas somente após solicitação do usuário e confirmação pelo Controle de Conta de Usuário do Windows.
+- O instalador pode baixar componentes oficiais da Microsoft necessários à execução, como WebView2, Windows App Runtime e .NET Desktop Runtime.
+- Algumas funcionalidades opcionais exigem programas, drivers ou SDKs de terceiros que não fazem parte deste projeto e estão sujeitos às licenças de seus respectivos fornecedores.
+- Todas as funcionalidades do Assistente ICP são atualizadas em conjunto; não existem pacotes de atualização separados.
+
+Ao prosseguir, o usuário confirma que leu estas informações e autoriza a instalação do Assistente ICP e de seus pré-requisitos oficiais.

@@ -1,0 +1,681 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Page
+    x:Class="GerenciadorIcpBrasil.Views.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:GerenciadorIcpBrasil"
+    xmlns:converters="using:GerenciadorIcpBrasil.Converters"
+    xmlns:configConv="using:GerenciadorIcpBrasil.Modules.ConfigAuditoria.Converters"
+    xmlns:configModels="using:GerenciadorIcpBrasil.Modules.ConfigAuditoria.Models"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    xmlns:installer="using:GerenciadorIcpBrasil.Modules.InstallerLauncher.ViewModels"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <Page.Resources>
+        <converters:BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <converters:BooleanNegationConverter x:Key="BoolNegate" />
+        <converters:ModulePanelVisibilityConverter x:Key="ModulePanelVis" />
+        <converters:ModuleDetailVisibilityConverter x:Key="ModuleDetailVis" />
+        <converters:Base64ToImageSourceConverter x:Key="Base64ToImage" />
+        <configConv:StatusToBrushConverter x:Key="ConfigStatusBrush" />
+        <configConv:StatusToVisibilityConverter x:Key="ConfigStatusToVis" />
+        <configConv:StatusToBoolConverter x:Key="ConfigStatusToBool" />
+    </Page.Resources>
+    <Grid x:Name="RootGrid" Padding="16" RowSpacing="16" IsTabStop="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="TitleBarArea" ColumnSpacing="12" VerticalAlignment="Top" Margin="-8,0,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <BitmapIcon UriSource="ms-appx:///Assets/icon.png"
+                            Width="18"
+                            Height="18"
+                            ShowAsMonochrome="False" />
+                <TextBlock Text="Assistente ICP" FontWeight="SemiBold" VerticalAlignment="Center" />
+            </StackPanel>
+            <AutoSuggestBox x:Name="SearchBox"
+                            Grid.Column="1"
+                            PlaceholderText="Pesquisar funcionalidades"
+                            Width="320"
+                            HorizontalAlignment="Center"
+                            TextChanged="OnSearchTextChanged" />
+        </Grid>
+
+        <Grid Grid.Row="1" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <ProgressRing Width="18" Height="18"
+                              IsActive="{Binding IsBusy}"
+                              Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+                <Button x:Name="AppUpdateButton"
+                        Content="Atualizar aplicativo"
+                        Click="OnCheckAppUpdateClick"
+                        IsEnabled="{Binding CanInteract}"
+                        Visibility="Collapsed" />
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="2" ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Background="{ThemeResource CardBackgroundFillColorDefault}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Visibility="{Binding IsAboutSearch, Converter={StaticResource BoolToVis}, ConverterParameter=Invert}">
+                <StackPanel>
+                    <ListView ItemsSource="{Binding FilteredModules}"
+                              SelectedItem="{Binding SelectedModule, Mode=TwoWay}"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Padding="10" ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="36" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="36" Height="36" CornerRadius="10" Background="{ThemeResource AccentFillColorDefaultBrush}" VerticalAlignment="Center">
+                                        <FontIcon Glyph="{Binding IconGlyph}"
+                                                  FontFamily="Segoe Fluent Icons"
+                                                  Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
+                                                  FontSize="18"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <Ellipse Width="9"
+                                                 Height="9"
+                                                 Fill="{Binding RuntimeStatusBrush}"
+                                                 Visibility="{Binding ShowsRuntimeStatus, Converter={StaticResource BoolToVis}}"
+                                                 VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1"
+                    Background="{ThemeResource CardBackgroundFillColorDefault}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="16"
+                    Visibility="{Binding IsAboutSearch, Converter={StaticResource BoolToVis}, ConverterParameter=Invert}">
+                <Grid>
+                    <StackPanel Visibility="{Binding ShowDefaultEmptyState, Converter={StaticResource BoolToVis}}" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6">
+                        <TextBlock Text="Selecione uma funcionalidade" FontWeight="SemiBold" FontSize="16" />
+                        <TextBlock Text="Veja os detalhes da funcionalidade desejada." Foreground="{ThemeResource TextFillColorSecondary}" />
+                    </StackPanel>
+
+                    <ScrollViewer Visibility="{Binding SelectedModule, Converter={StaticResource ModuleDetailVis}}"
+                                  Padding="0,0,12,0"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Spacing="12">
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Width="44" Height="44" CornerRadius="12" Background="{ThemeResource AccentFillColorDefaultBrush}" VerticalAlignment="Center">
+                                    <FontIcon Glyph="{Binding SelectedModule.IconGlyph}"
+                                              FontFamily="Segoe Fluent Icons"
+                                              Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
+                                              FontSize="22"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                                </Border>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding SelectedModule.Name}" FontSize="20" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="{Binding SelectedModule.Description}"
+                                       TextWrapping="WrapWholeWords"
+                                       FontSize="13"
+                                       Foreground="{ThemeResource TextFillColorSecondary}" />
+
+                        <Grid ColumnSpacing="16"
+                              Margin="0,6,0,0"
+                              Visibility="{Binding DataContext.SelectedModule, ElementName=RootGrid, Converter={StaticResource ModulePanelVis}, ConverterParameter=leitora-biometrica}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Teste da leitora biométrica" FontWeight="SemiBold" FontSize="16" />
+                                    <TextBlock Text="{Binding BiometriaStatusText}"
+                                               Foreground="{ThemeResource TextFillColorSecondary}"
+                                               FontSize="13"
+                                               TextWrapping="Wrap" />
+
+                                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <TextBlock Text="Timeout (ms)" VerticalAlignment="Center" />
+                                        <TextBox Width="100"
+                                                 Text="{Binding BiometriaTimeoutMs, Mode=TwoWay}"
+                                                 IsEnabled="{Binding CanBiometriaInteract}" />
+                                        <ProgressRing Width="16" Height="16"
+                                                      IsActive="{Binding IsBiometriaBusy}"
+                                                      Visibility="{Binding IsBiometriaBusy, Converter={StaticResource BoolToVis}}" />
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button Content="Verificar status"
+                                                Click="OnBiometriaStatusClick"
+                                                IsEnabled="{Binding CanBiometriaInteract}" />
+                                        <Button Content="Capturar"
+                                                Click="OnBiometriaCaptureClick"
+                                                IsEnabled="{Binding CanBiometriaInteract}" />
+                                    </StackPanel>
+
+                                    <TextBlock Text="{Binding BiometriaResultText}" TextWrapping="WrapWholeWords" />
+                                </StackPanel>
+
+                                <Border Grid.Column="1"
+                                        CornerRadius="10"
+                                        BorderThickness="1"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                                        Background="{ThemeResource CardBackgroundFillColorDefault}"
+                                        Padding="8"
+                                        VerticalAlignment="Top"
+                                        Visibility="{Binding HasBiometriaImage, Converter={StaticResource BoolToVis}}">
+                                    <StackPanel Spacing="6">
+                                        <Image Source="{Binding BiometriaImageBase64, Converter={StaticResource Base64ToImage}}"
+                                               Width="160"
+                                               Height="160"
+                                               Stretch="Uniform" />
+                                        <TextBlock Text="{Binding BiometriaImageInfo}"
+                                                   Foreground="{ThemeResource TextFillColorSecondary}"
+                                                   HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+                        </Grid>
+
+                        <Grid x:Name="ConfigAuditoriaPanel"
+                              Margin="0,6,0,0"
+                              DataContext="{Binding ConfigAuditoria}"
+                              ColumnSpacing="16"
+                              Visibility="{Binding DataContext.SelectedModule, ElementName=RootGrid, Converter={StaticResource ModulePanelVis}, ConverterParameter=config-auditoria}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="320" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Spacing="12">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="Configurações de segurança" FontWeight="SemiBold" FontSize="16" />
+                                        <TextBlock Text="Revise e aplique as configurações necessárias para manter a estação protegida."
+                                                   Foreground="{ThemeResource TextFillColorSecondary}"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+
+                                    <Border Background="#0F172A" CornerRadius="12" Padding="12">
+                                        <StackPanel Spacing="8" Margin="0,4,0,4">
+                                            <TextBlock Text="Resumo do dispositivo"
+                                                       Foreground="#E0E7FF"
+                                                       FontWeight="SemiBold" />
+                                            <StackPanel>
+                                                <TextBlock Text="Hostname" Foreground="#CBD5F5" FontSize="12" />
+                                                <TextBlock Text="{Binding HostName}" Foreground="White" FontSize="18" FontWeight="SemiBold" />
+                                            </StackPanel>
+                                            <StackPanel>
+                                                <TextBlock Text="Data e hora" Foreground="#CBD5F5" FontSize="12" />
+                                                <TextBlock Text="{Binding CurrentDateDisplay}" Foreground="#F9FAFB" FontSize="14" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding CurrentTimeDisplay}" Foreground="#E5E7EB" FontSize="12" />
+                                            </StackPanel>
+                                            <Border Background="#1E293B" CornerRadius="10" Padding="10">
+                                                <StackPanel>
+                                                    <TextBlock Text="Enderecos MAC" Foreground="#A5B4FC" FontSize="12" />
+                                                    <TextBlock Text="{Binding MacAddressDisplay}"
+                                                               Foreground="#F9FAFB"
+                                                               TextWrapping="Wrap"
+                                                               FontSize="12"
+                                                               MaxHeight="120" />
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <StackPanel Spacing="8">
+                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <ProgressRing Width="16" Height="16"
+                                                          IsActive="{Binding IsBusy}"
+                                                          Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
+                                            <TextBlock Text="{Binding IsBusy, Converter={StaticResource BoolToVis}, ConverterParameter=Invert}"
+                                                       Visibility="Collapsed" />
+                                        </StackPanel>
+
+                                        <Button Content="Verificar configurações"
+                                                Command="{Binding RefreshCommand}"
+                                                IsEnabled="{Binding IsBusy, Converter={StaticResource BoolNegate}}" />
+                                        <Button Content="Salvar evidências"
+                                                Command="{Binding SaveEvidenceCommand}"
+                                                IsEnabled="{Binding IsBusy, Converter={StaticResource BoolNegate}}" />
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <ScrollViewer Grid.Column="1"
+                                              VerticalScrollBarVisibility="Auto"
+                                              HorizontalScrollBarVisibility="Disabled">
+                                    <controls:ItemsRepeater ItemsSource="{Binding Categories}">
+                                            <controls:ItemsRepeater.Layout>
+                                            <controls:UniformGridLayout x:Name="ConfigCategoriesLayout"
+                                                                        Orientation="Horizontal"
+                                                                        MaximumRowsOrColumns="4"
+                                                                        ItemsStretch="Fill"
+                                                                        MinItemWidth="220"
+                                                                        MinItemHeight="120"
+                                                                        MinRowSpacing="12"
+                                                                        MinColumnSpacing="12" />
+                                        </controls:ItemsRepeater.Layout>
+                                        <controls:ItemsRepeater.ItemTemplate>
+                                            <DataTemplate x:DataType="configModels:ConfigurationCategory">
+                                                <Button Padding="12"
+                                                        Background="{ThemeResource CardBackgroundFillColorDefault}"
+                                                        BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="10"
+                                                        Height="120"
+                                                        HorizontalAlignment="Stretch"
+                                                        HorizontalContentAlignment="Stretch"
+                                                        VerticalContentAlignment="Stretch"
+                                                        Command="{Binding DataContext.RemediateCommand, ElementName=ConfigAuditoriaPanel}"
+                                                        CommandParameter="{Binding}"
+                                                        IsEnabled="{Binding IsInteractiveRemediationAvailable}">
+                                                    <Grid ColumnSpacing="10">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <Grid Width="24" Height="24" VerticalAlignment="Center">
+                                                            <Ellipse Fill="{Binding Status, Converter={StaticResource ConfigStatusBrush}}"
+                                                                     Stroke="{ThemeResource CardStrokeColorDefault}"
+                                                                     StrokeThickness="1"
+                                                                     Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}, ConverterParameter=Invert}" />
+                                                            <ProgressRing Width="20"
+                                                                          Height="20"
+                                                                          IsActive="True"
+                                                                          Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
+                                                        </Grid>
+
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                                                            <TextBlock Text="{Binding StatusMessage}"
+                                                                       Foreground="{ThemeResource TextFillColorSecondary}"
+                                                                       FontSize="12"
+                                                                       TextWrapping="Wrap"
+                                                                       MaxHeight="48" />
+                                                        </StackPanel>
+
+                                                        <TextBlock Grid.Column="2"
+                                                                   Text="Aplicar"
+                                                                   Foreground="#10B981"
+                                                                   FontWeight="SemiBold"
+                                                                   VerticalAlignment="Center"
+                                                                   Visibility="{Binding IsInteractiveRemediationAvailable, Converter={StaticResource BoolToVis}}" />
+                                                    </Grid>
+                                                </Button>
+                                            </DataTemplate>
+                                        </controls:ItemsRepeater.ItemTemplate>
+                                    </controls:ItemsRepeater>
+                                </ScrollViewer>
+                        </Grid>
+
+                        <Grid DataContext="{Binding InstallerLauncher}"
+                              Margin="0,6,0,0"
+                              RowSpacing="12"
+                              Visibility="{Binding DataContext.SelectedModule, ElementName=RootGrid, Converter={StaticResource ModulePanelVis}, ConverterParameter=installer-launcher}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0">
+                                <StackPanel Spacing="8" HorizontalAlignment="Stretch">
+                                    <TextBlock Text="{Binding ModuleIntroDescription}"
+                                               Foreground="{ThemeResource TextFillColorSecondary}"
+                                               FontSize="13"
+                                               HorizontalAlignment="Stretch"
+                                               TextAlignment="Left"
+                                               TextWrapping="Wrap" />
+                                    <StackPanel HorizontalAlignment="Center"
+                                                Spacing="6">
+                                        <TextBlock Text="Modo de instalação"
+                                                   HorizontalAlignment="Center" />
+                                        <StackPanel Orientation="Horizontal"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center">
+                                            <TextBlock Text="Manual"
+                                                       Width="140"
+                                                       TextAlignment="Right"
+                                                       HorizontalAlignment="Right"
+                                                       Margin="0,0,18,0"
+                                                       VerticalAlignment="Center" />
+                                            <ToggleSwitch IsOn="{Binding IsAutomaticInstallation, Mode=TwoWay}"
+                                                          OnContent=""
+                                                          OffContent=""
+                                                          Width="52"
+                                                          MinWidth="52"
+                                                          MaxWidth="52"
+                                                          VerticalAlignment="Center" />
+                                            <TextBlock Text="Automático"
+                                                       Width="140"
+                                                       FontWeight="SemiBold"
+                                                       TextAlignment="Left"
+                                                       HorizontalAlignment="Left"
+                                                       Margin="18,0,0,0"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding InstallationModeDescription}"
+                                               Foreground="{ThemeResource TextFillColorSecondary}"
+                                               FontSize="12"
+                                               HorizontalAlignment="Stretch"
+                                               TextAlignment="Left"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                                </Grid>
+
+                                <ScrollViewer Grid.Row="1"
+                                              Padding="0,0,12,0"
+                                              VerticalScrollBarVisibility="Auto"
+                                              HorizontalScrollBarVisibility="Disabled">
+                                    <StackPanel Spacing="12">
+                                        <ItemsRepeater ItemsSource="{Binding Groups}">
+                                            <ItemsRepeater.ItemTemplate>
+                                                <DataTemplate x:DataType="installer:InstallerGroupViewModel">
+                                                    <Expander Header="{x:Bind Title}"
+                                                              IsExpanded="{x:Bind IsExpanded, Mode=TwoWay}"
+                                                              HorizontalAlignment="Stretch"
+                                                              HorizontalContentAlignment="Stretch"
+                                                              Margin="0,0,0,10">
+                                                        <ItemsRepeater ItemsSource="{x:Bind Items}">
+                                                            <ItemsRepeater.Layout>
+                                                                <controls:UniformGridLayout Orientation="Horizontal"
+                                                                                            MaximumRowsOrColumns="4"
+                                                                                            ItemsStretch="Fill"
+                                                                                            MinItemWidth="320"
+                                                                                            MinItemHeight="150"
+                                                                                            MinColumnSpacing="10"
+                                                                                            MinRowSpacing="8" />
+                                                            </ItemsRepeater.Layout>
+                                                            <ItemsRepeater.ItemTemplate>
+                                                                <DataTemplate x:DataType="installer:InstallerItemViewModel">
+                                                                    <Border Padding="12"
+                                                                            Margin="0"
+                                                                            CornerRadius="12"
+                                                                            BorderThickness="1"
+                                                                            BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                                                                            Background="{ThemeResource CardBackgroundFillColorDefault}"
+                                                                            MinHeight="150">
+                                                                        <Grid>
+                                                                            <StackPanel Spacing="7">
+                                                                                <TextBlock Text="{x:Bind DisplayName}"
+                                                                                           FontWeight="SemiBold"
+                                                                                           TextWrapping="Wrap" />
+                                                                                <StackPanel Orientation="Horizontal"
+                                                                                            Spacing="10"
+                                                                                            Visibility="{x:Bind ShowStandardActions, Converter={StaticResource BoolToVis}}">
+                                                                                    <TextBlock Text="{x:Bind InstallationSummary, Mode=OneWay}"
+                                                                                               Foreground="{ThemeResource TextFillColorSecondary}" />
+                                                                                    <TextBlock Text="Requer:"
+                                                                                               Foreground="{ThemeResource TextFillColorSecondary}" />
+                                                                                    <TextBlock Text="{x:Bind RequiredVersion, TargetNullValue=-}"
+                                                                                               Foreground="{ThemeResource TextFillColorSecondary}" />
+                                                                                </StackPanel>
+                                                                                <TextBlock Text="{x:Bind StatusLabel}"
+                                                                                           Foreground="{ThemeResource TextFillColorSecondary}"
+                                                                                           Visibility="{x:Bind ShowBrowserExtensionActions, Converter={StaticResource BoolToVis}}" />
+                                                                                <StackPanel Orientation="Horizontal"
+                                                                                            Spacing="8"
+                                                                                            Visibility="{x:Bind ShowStandardActions, Converter={StaticResource BoolToVis}}">
+                                                                                    <Button Content="{x:Bind PrimaryActionLabel, Mode=OneWay}"
+                                                                                            Command="{x:Bind InstallCommand}"
+                                                                                            IsEnabled="{x:Bind IsBusy, Converter={StaticResource BoolNegate}, Mode=OneWay}" />
+                                                                                    <Button Content="Desinstalar"
+                                                                                            Command="{x:Bind UninstallCommand}"
+                                                                                            IsEnabled="{x:Bind CanUninstall}"
+                                                                                            Visibility="{x:Bind ShowUninstallAction, Converter={StaticResource BoolToVis}}" />
+                                                                                </StackPanel>
+                                                                                <StackPanel Orientation="Horizontal"
+                                                                                            Spacing="8"
+                                                                                            Visibility="{x:Bind ShowBrowserExtensionActions, Converter={StaticResource BoolToVis}}">
+                                                                                    <Button Content="Instalar no Chrome"
+                                                                                            Command="{x:Bind InstallOnChromeCommand}"
+                                                                                            IsEnabled="{x:Bind IsBusy, Converter={StaticResource BoolNegate}, Mode=OneWay}" />
+                                                                                    <Button Content="Instalar no Edge"
+                                                                                            Command="{x:Bind InstallOnEdgeCommand}"
+                                                                                            IsEnabled="{x:Bind IsBusy, Converter={StaticResource BoolNegate}, Mode=OneWay}" />
+                                                                                </StackPanel>
+                                                                            </StackPanel>
+
+                                                                            <ProgressBar VerticalAlignment="Bottom"
+                                                                                         Height="4"
+                                                                                         Margin="0,0,0,0"
+                                                                                         Minimum="0"
+                                                                                         Maximum="100"
+                                                                                         CornerRadius="0"
+                                                                                         BorderThickness="0"
+                                                                                         Foreground="#63D64E"
+                                                                                         Background="Transparent"
+                                                                                         Value="{x:Bind DownloadProgress, Mode=OneWay}"
+                                                                                         IsIndeterminate="{x:Bind IsDownloadIndeterminate, Mode=OneWay}"
+                                                                                         Visibility="{x:Bind IsDownloading, Converter={StaticResource BoolToVis}, Mode=OneWay}" />
+                                                                        </Grid>
+                                                                    </Border>
+                                                                </DataTemplate>
+                                                            </ItemsRepeater.ItemTemplate>
+                                                        </ItemsRepeater>
+                                                    </Expander>
+                                                </DataTemplate>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+                                    </StackPanel>
+                                </ScrollViewer>
+                        </Grid>
+
+                        <Grid Margin="0,6,0,0"
+                              RowSpacing="12"
+                              Visibility="{Binding DataContext.SelectedModule, ElementName=RootGrid, Converter={StaticResource ModulePanelVis}, ConverterParameter=links-uteis}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Spacing="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                        <ProgressRing Width="16"
+                                                      Height="16"
+                                                      IsActive="{Binding IsUsefulLinksBusy}"
+                                                      Visibility="{Binding IsUsefulLinksBusy, Converter={StaticResource BoolToVis}}" />
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding UsefulLinksStatusText}"
+                                               Foreground="{ThemeResource TextFillColorSecondary}"
+                                               FontSize="13"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+
+                                <ScrollViewer Grid.Row="1"
+                                              Padding="0,0,12,0"
+                                              VerticalScrollBarVisibility="Auto"
+                                              HorizontalScrollBarVisibility="Disabled"
+                                              Margin="0,6,0,0">
+                                    <StackPanel Spacing="12">
+                                        <ItemsRepeater ItemsSource="{Binding UsefulLinkGroups}">
+                                            <ItemsRepeater.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Expander Header="{Binding Category}"
+                                                              IsExpanded="{Binding IsExpanded, Mode=TwoWay}"
+                                                              HorizontalAlignment="Stretch"
+                                                              HorizontalContentAlignment="Stretch"
+                                                              Margin="0,0,0,10">
+                                                        <ItemsRepeater ItemsSource="{Binding Items}">
+                                                            <ItemsRepeater.Layout>
+                                                                <controls:UniformGridLayout Orientation="Horizontal"
+                                                                                            MaximumRowsOrColumns="4"
+                                                                                            ItemsStretch="Fill"
+                                                                                            MinItemWidth="320"
+                                                                                            MinItemHeight="140"
+                                                                                            MinColumnSpacing="10"
+                                                                                            MinRowSpacing="8" />
+                                                            </ItemsRepeater.Layout>
+                                                            <ItemsRepeater.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Border Padding="10"
+                                                                            Margin="0,8,0,0"
+                                                                            CornerRadius="10"
+                                                                            BorderThickness="1"
+                                                                            BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                                                                            Background="{ThemeResource CardBackgroundFillColorDefault}"
+                                                                            MinHeight="140">
+                                                                        <Grid ColumnSpacing="12">
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition Width="*" />
+                                                                                <ColumnDefinition Width="Auto" />
+                                                                            </Grid.ColumnDefinitions>
+                                                                            <StackPanel Spacing="3">
+                                                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                                                                <TextBlock Text="{Binding Description}"
+                                                                                           TextWrapping="Wrap"
+                                                                                           Foreground="{ThemeResource TextFillColorSecondary}" />
+                                                                            </StackPanel>
+                                                                            <StackPanel Grid.Column="1"
+                                                                                        Orientation="Vertical"
+                                                                                        Spacing="6"
+                                                                                        VerticalAlignment="Center">
+                                                                                <Button Content="Abrir"
+                                                                                        Tag="{Binding Url}"
+                                                                                        Click="OnOpenUsefulLinkClick" />
+                                                                                <Button Content="Copiar link"
+                                                                                        Tag="{Binding Url}"
+                                                                                        Click="OnCopyUsefulLinkClick" />
+                                                                            </StackPanel>
+                                                                        </Grid>
+                                                                    </Border>
+                                                                </DataTemplate>
+                                                            </ItemsRepeater.ItemTemplate>
+                                                        </ItemsRepeater>
+                                                    </Expander>
+                                                </DataTemplate>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+                                    </StackPanel>
+                                </ScrollViewer>
+                        </Grid>
+
+                        <Grid Margin="0,6,0,0"
+                              RowSpacing="10"
+                              Visibility="{Binding DataContext.SelectedModule, ElementName=RootGrid, Converter={StaticResource ModulePanelVis}, ConverterParameter=biometric-license-status}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <Expander IsExpanded="{Binding IsBiometricDetailsExpanded, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch"
+                                          HorizontalContentAlignment="Stretch">
+                                    <Expander.Header>
+                                        <StackPanel Spacing="8" Padding="0,8,0,8">
+                                            <TextBlock Text="Status da licença biométrica" FontWeight="SemiBold" FontSize="16" />
+                                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <Ellipse Width="12" Height="12" Fill="{Binding BiometricLicenseStatusBrush}" />
+                                                <TextBlock Text="{Binding BiometricLicenseStatusTitle}" FontWeight="SemiBold" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Expander.Header>
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="{Binding BiometricLicenseStatusText}"
+                                                   Foreground="{ThemeResource TextFillColorSecondary}"
+                                                   TextWrapping="WrapWholeWords" />
+                                        <TextBlock Foreground="{ThemeResource TextFillColorSecondary}" TextWrapping="WrapWholeWords">
+                                            <Run Text="Arquivo da licença: " />
+                                            <Run Text="{Binding BiometricLicenseDetectedFilePath}" />
+                                        </TextBlock>
+                                        <TextBlock Foreground="{ThemeResource TextFillColorSecondary}" TextWrapping="WrapWholeWords">
+                                            <Run Text="Última atualização da licença: " />
+                                            <Run Text="{Binding BiometricLicenseLastWriteText}" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Expander>
+
+                                <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
+                                    <Button Content="Atualizar status"
+                                            Click="OnBiometricLicenseStatusRefreshClick"
+                                            IsEnabled="{Binding CanInteract}" />
+                                    <Button Content="Realizar backup"
+                                            Click="OnBiometricLicenseBackupClick"
+                                            IsEnabled="{Binding CanInteract}" />
+                                    <Button Content="Restaurar backup"
+                                            Click="OnBiometricLicenseRestoreClick"
+                                            IsEnabled="{Binding CanRestoreBiometricLicenseBackup}" />
+                                </StackPanel>
+                        </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <Border Grid.ColumnSpan="2"
+                    Background="{ThemeResource CardBackgroundFillColorDefault}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefault}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="32"
+                    Visibility="{Binding IsAboutSearch, Converter={StaticResource BoolToVis}}">
+                <StackPanel MaxWidth="620"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="12">
+                    <BitmapIcon UriSource="ms-appx:///Assets/icon.png"
+                                Width="64"
+                                Height="64"
+                                ShowAsMonochrome="False"
+                                HorizontalAlignment="Center" />
+                    <TextBlock Text="Assistente ICP"
+                               FontSize="28"
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding AboutVersionText}"
+                               FontSize="15"
+                               Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="Desenvolvido pela YeZ"
+                               FontSize="13"
+                               Foreground="{ThemeResource TextFillColorSecondary}"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding AboutSummaryText}"
+                               TextAlignment="Center"
+                               TextWrapping="WrapWholeWords"
+                               Foreground="{ThemeResource TextFillColorSecondary}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+
+    </Grid>
+</Page>
