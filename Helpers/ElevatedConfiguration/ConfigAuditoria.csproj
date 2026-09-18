@@ -8,9 +8,9 @@
     <UseWPF>true</UseWPF>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>img\RedeIcpBrasil.ico</ApplicationIcon>
-    <Product>Assistente ICP</Product>
-    <AssemblyTitle>Assistente ICP — Configuração elevada</AssemblyTitle>
-    <Description>Executor administrativo integrado ao Assistente ICP.</Description>
+    <Product>Gerenciador ICP Brasil</Product>
+    <AssemblyTitle>Gerenciador ICP Brasil — Configuração elevada</AssemblyTitle>
+    <Description>Executor administrativo integrado ao Gerenciador ICP Brasil.</Description>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
 
 

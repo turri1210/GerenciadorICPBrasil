@@ -120,7 +120,7 @@ public sealed class CertificateBridgeService : IAsyncDisposable
             await next().ConfigureAwait(false);
         });
 
-        application.MapGet("/health", () => Results.Json(new { status = "ok", product = "Assistente ICP" }));
+        application.MapGet("/health", () => Results.Json(new { status = "ok", product = "Gerenciador ICP Brasil" }));
         application.MapGet("/certificados", ListCertificatesAsync);
         application.MapPost("/assinar", SignAsync);
         application.MapPost("/biometria/capturar", CaptureBiometricsAsync);

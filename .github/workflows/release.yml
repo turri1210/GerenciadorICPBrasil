@@ -32,7 +32,7 @@ jobs:
       - name: Testar
         shell: pwsh
         run: |
-          dotnet restore AssistenteICP.sln --locked-mode
+          dotnet restore GerenciadorICPBrasil.sln --locked-mode
           dotnet run --project tests/SecurityPolicyChecks/SecurityPolicyChecks.csproj -c Release
 
       - name: Gerar aplicativo não assinado

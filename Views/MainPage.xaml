@@ -40,7 +40,7 @@
                             Width="18"
                             Height="18"
                             ShowAsMonochrome="False" />
-                <TextBlock Text="Assistente ICP" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <TextBlock Text="Gerenciador ICP Brasil" FontWeight="SemiBold" VerticalAlignment="Center" />
             </StackPanel>
             <AutoSuggestBox x:Name="SearchBox"
                             Grid.Column="1"
@@ -656,7 +656,7 @@
                                 Height="64"
                                 ShowAsMonochrome="False"
                                 HorizontalAlignment="Center" />
-                    <TextBlock Text="Assistente ICP"
+                    <TextBlock Text="Gerenciador ICP Brasil"
                                FontSize="28"
                                FontWeight="SemiBold"
                                HorizontalAlignment="Center" />

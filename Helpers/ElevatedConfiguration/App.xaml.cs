@@ -50,7 +50,7 @@ public partial class App : Application
             LogWriter.Write("Solicitação elevada rejeitada: contrato de argumentos inválido.");
             MessageBox.Show(
                 "A solicitação de configuração não é válida.",
-                "Assistente ICP",
+                "Gerenciador ICP Brasil",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
             return 2;
@@ -86,7 +86,7 @@ public partial class App : Application
             LogWriter.Write(ex, $"Falha na operação elevada '{operation}'.");
             MessageBox.Show(
                 $"Não foi possível concluir a operação administrativa. Detalhes: {ex.Message}",
-                "Assistente ICP",
+                "Gerenciador ICP Brasil",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
             return 1;

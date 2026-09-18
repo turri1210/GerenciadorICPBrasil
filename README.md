@@ -1,4 +1,4 @@
-# Assistente ICP
+# Gerenciador ICP Brasil
 
 Aplicativo Windows de código aberto para preparar, verificar e configurar estações que utilizam certificados digitais no ecossistema ICP-Brasil.
 
@@ -20,7 +20,7 @@ Pré-requisitos para o aplicativo principal:
 - Inno Setup 6 para gerar o instalador.
 
 ```powershell
-dotnet restore AssistenteICP.sln --locked-mode
+dotnet restore GerenciadorICPBrasil.sln --locked-mode
 ./scripts/build-release.ps1 -Version 1.2.13
 ```
 
@@ -44,7 +44,7 @@ O produto funciona sem esses componentes. Somente as funcionalidades dependentes
 
 ## Atualizações
 
-O Assistente ICP não baixa pacotes de funcionalidades nem mantém versões independentes. Qualquer alteração é publicada como uma nova versão completa do instalador. O atualizador exige SHA-256 válido e assinatura Authenticode emitida para a SignPath Foundation antes de executar o instalador.
+O Gerenciador ICP Brasil não baixa pacotes de funcionalidades nem mantém versões independentes. Qualquer alteração é publicada como uma nova versão completa do instalador. O atualizador exige SHA-256 válido e assinatura Authenticode emitida para a SignPath Foundation antes de executar o instalador.
 
 ## Privacidade
 
@@ -58,7 +58,7 @@ Não coloque certificados, senhas, tokens ou chaves de API no repositório. Vuln
 
 Free code signing provided by SignPath.io, certificate by SignPath Foundation.
 
-Somente binários produzidos integralmente pelo código deste repositório e pelo workflow oficial podem receber a assinatura do projeto. Drivers, runtimes, DLLs, SDKs e instaladores de terceiros não são assinados como parte do Assistente ICP.
+Somente binários produzidos integralmente pelo código deste repositório e pelo workflow oficial podem receber a assinatura do projeto. Drivers, runtimes, DLLs, SDKs e instaladores de terceiros não são assinados como parte do Gerenciador ICP Brasil.
 
 Cada release exige revisão e aprovação humana antes da assinatura. O fluxo usa runners hospedados pelo GitHub e verificação de origem do artefato.
 

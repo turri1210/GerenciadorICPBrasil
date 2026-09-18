@@ -5,9 +5,9 @@
         <OutputType>WinExe</OutputType>
         <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
 
-        <AssemblyTitle>Assistente ICP</AssemblyTitle>
-        <Product>Assistente ICP</Product>
-        <Description>Assistente para preparação e verificação de estações Windows que utilizam certificados digitais.</Description>
+        <AssemblyTitle>Gerenciador ICP Brasil</AssemblyTitle>
+        <Product>Gerenciador ICP Brasil</Product>
+        <Description>Gerenciador para preparação e verificação de estações Windows que utilizam certificados digitais.</Description>
 
         <!-- WinUI 3 -->
         <UseWinUI>true</UseWinUI>

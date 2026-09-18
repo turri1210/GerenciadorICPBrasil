@@ -10,10 +10,10 @@
 
 [Setup]
 AppId=Gerenciador ICP Brasil
-AppName=Assistente ICP
+AppName=Gerenciador ICP Brasil
 AppVersion={#AppVersion}
 DefaultDirName={autopf}\Gerenciador ICP Brasil
-DefaultGroupName=Assistente ICP
+DefaultGroupName=Gerenciador ICP Brasil
 DisableDirPage=yes
 DisableWelcomePage=yes
 DisableReadyPage=yes
@@ -36,15 +36,15 @@ LicenseFile=consent.txt
 UninstallDisplayIcon={app}\GerenciadorIcpBrasil.exe
 VersionInfoVersion={#AppVersion}.0
 VersionInfoProductVersion={#AppVersion}
-VersionInfoProductName=Assistente ICP
+VersionInfoProductName=Gerenciador ICP Brasil
 VersionInfoCompany=Rede ICP Brasil
-VersionInfoDescription=Instalador do Assistente ICP
+VersionInfoDescription=Instalador do Gerenciador ICP Brasil
 
 #define WebView2BootstrapperUrl "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
 #define WindowsAppRuntimeInstallerUrl "https://aka.ms/windowsappsdk/1.8/latest/windowsappruntimeinstall-x64.exe"
 #define DotNetDesktopRuntimeInstallerUrl "https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe"
-#define AppProtocolScheme "assistente-icp"
-#define LegacyAppProtocolScheme "gerenciador-icp-brasil"
+#define AppProtocolScheme "gerenciador-icp-brasil"
+#define LegacyAppProtocolScheme "assistente-icp"
 
 [Languages]
 Name: "ptbr"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
@@ -58,24 +58,25 @@ ptbr.LicenseLabel3=Voce deve aceitar os termos do acordo para prosseguir com a i
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
 
 [Icons]
-Name: "{group}\Assistente ICP"; Filename: "{app}\GerenciadorIcpBrasil.exe"
-Name: "{commondesktop}\Assistente ICP"; Filename: "{app}\GerenciadorIcpBrasil.exe"
+Name: "{group}\Gerenciador ICP Brasil"; Filename: "{app}\GerenciadorIcpBrasil.exe"
+Name: "{commondesktop}\Gerenciador ICP Brasil"; Filename: "{app}\GerenciadorIcpBrasil.exe"
 
 [Registry]
 Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: none; ValueName: "Gerenciador ICP Brasil"; Flags: deletevalue
-Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "Assistente ICP"; ValueData: """{app}\GerenciadorIcpBrasil.exe"" --background-startup"; Flags: uninsdeletevalue
-Root: HKLM; Subkey: "Software\Classes\{#AppProtocolScheme}"; ValueType: string; ValueName: ""; ValueData: "Assistente ICP protocol"; Flags: uninsdeletekey
+Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: none; ValueName: "Assistente ICP"; Flags: deletevalue
+Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "Gerenciador ICP Brasil"; ValueData: """{app}\GerenciadorIcpBrasil.exe"" --background-startup"; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "Software\Classes\{#AppProtocolScheme}"; ValueType: string; ValueName: ""; ValueData: "Gerenciador ICP Brasil protocol"; Flags: uninsdeletekey
 Root: HKLM; Subkey: "Software\Classes\{#AppProtocolScheme}"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""
 Root: HKLM; Subkey: "Software\Classes\{#AppProtocolScheme}\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\GerenciadorIcpBrasil.exe,0"
 Root: HKLM; Subkey: "Software\Classes\{#AppProtocolScheme}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\GerenciadorIcpBrasil.exe"" ""%1"""
 
-Root: HKLM; Subkey: "Software\Classes\{#LegacyAppProtocolScheme}"; ValueType: string; ValueName: ""; ValueData: "Assistente ICP protocol (legado)"; Flags: uninsdeletekey
+Root: HKLM; Subkey: "Software\Classes\{#LegacyAppProtocolScheme}"; ValueType: string; ValueName: ""; ValueData: "Gerenciador ICP Brasil protocol (compatibilidade)"; Flags: uninsdeletekey
 Root: HKLM; Subkey: "Software\Classes\{#LegacyAppProtocolScheme}"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""
 Root: HKLM; Subkey: "Software\Classes\{#LegacyAppProtocolScheme}\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\GerenciadorIcpBrasil.exe,0"
 Root: HKLM; Subkey: "Software\Classes\{#LegacyAppProtocolScheme}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\GerenciadorIcpBrasil.exe"" ""%1"""
 
 [Run]
-Filename: "{app}\GerenciadorIcpBrasil.exe"; Description: "Abrir Assistente ICP"; Flags: nowait postinstall skipifsilent runascurrentuser
+Filename: "{app}\GerenciadorIcpBrasil.exe"; Description: "Abrir Gerenciador ICP Brasil"; Flags: nowait postinstall skipifsilent runascurrentuser
 
 [Code]
 var

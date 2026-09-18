@@ -12,9 +12,9 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <Product>Assistente ICP</Product>
-    <AssemblyTitle>Assistente ICP — Seletor de certificados</AssemblyTitle>
-    <Description>Seletor local de certificados integrado ao Assistente ICP.</Description>
+    <Product>Gerenciador ICP Brasil</Product>
+    <AssemblyTitle>Gerenciador ICP Brasil — Seletor de certificados</AssemblyTitle>
+    <Description>Seletor local de certificados integrado ao Gerenciador ICP Brasil.</Description>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 

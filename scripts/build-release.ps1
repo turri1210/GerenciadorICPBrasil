@@ -24,7 +24,7 @@ if (Test-Path -LiteralPath $resolvedOutputPath)
     Remove-Item -LiteralPath $resolvedOutputPath -Recurse -Force
 }
 
-dotnet restore (Join-Path $repositoryRoot 'AssistenteICP.sln') --locked-mode
+dotnet restore (Join-Path $repositoryRoot 'GerenciadorICPBrasil.sln') --locked-mode
 dotnet publish (Join-Path $repositoryRoot 'GerenciadorIcpBrasil.csproj') `
     -c Release `
     -r $Runtime `

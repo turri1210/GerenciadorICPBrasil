@@ -3,7 +3,7 @@ using GerenciadorIcpBrasil.Models;
 namespace GerenciadorIcpBrasil.Services;
 
 /// <summary>
-/// Catálogo das funcionalidades que fazem parte do Assistente ICP.
+/// Catálogo das funcionalidades que fazem parte do Gerenciador ICP Brasil.
 /// Não baixa, instala ou atualiza componentes separadamente.
 /// </summary>
 public sealed class ModuleCatalogService

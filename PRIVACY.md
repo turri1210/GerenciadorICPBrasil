@@ -2,7 +2,7 @@
 
 Última atualização: 18 de setembro de 2026.
 
-O Assistente ICP processa localmente informações técnicas necessárias para verificar e configurar a estação Windows.
+O Gerenciador ICP Brasil processa localmente informações técnicas necessárias para verificar e configurar a estação Windows.
 
 ## Edição pública
 

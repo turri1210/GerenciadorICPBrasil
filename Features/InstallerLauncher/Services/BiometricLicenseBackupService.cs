@@ -10,7 +10,8 @@ namespace GerenciadorIcpBrasil.Modules.InstallerLauncher.Services;
 /// </summary>
 public sealed class BiometricLicenseBackupService
 {
-    private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("AssistenteICP.BiometricLicenseBackup.v1");
+    private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("GerenciadorICPBrasil.BiometricLicenseBackup.v1");
+    private static readonly byte[] LegacyEntropy = Encoding.UTF8.GetBytes("AssistenteICP.BiometricLicenseBackup.v1");
 
     private static readonly string[] CandidateDirectories =
     {
@@ -49,7 +50,7 @@ public sealed class BiometricLicenseBackupService
     {
         var backupDirectory = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Assistente ICP",
+            "Gerenciador ICP Brasil",
             "backups");
         _backupPath = Path.Combine(backupDirectory, "biometric-license.json");
     }
@@ -103,7 +104,7 @@ public sealed class BiometricLicenseBackupService
             }
 
             var protectedBytes = Convert.FromBase64String(envelope.ProtectedContentBase64);
-            var bytes = ProtectedData.Unprotect(protectedBytes, Entropy, DataProtectionScope.CurrentUser);
+            var bytes = UnprotectCompatibleBackup(protectedBytes);
             var actualHash = Convert.ToHexString(SHA256.HashData(bytes));
             if (!actualHash.Equals(envelope.OriginalSha256, StringComparison.OrdinalIgnoreCase))
             {
@@ -126,6 +127,18 @@ public sealed class BiometricLicenseBackupService
     }
 
     public bool HasLocalBackup() => File.Exists(_backupPath);
+
+    private static byte[] UnprotectCompatibleBackup(byte[] protectedBytes)
+    {
+        try
+        {
+            return ProtectedData.Unprotect(protectedBytes, Entropy, DataProtectionScope.CurrentUser);
+        }
+        catch (CryptographicException)
+        {
+            return ProtectedData.Unprotect(protectedBytes, LegacyEntropy, DataProtectionScope.CurrentUser);
+        }
+    }
 
     public bool IsLicenseInstalled()
     {

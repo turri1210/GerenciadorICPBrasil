@@ -22,11 +22,11 @@ jobs:
 
       - name: Restore
         shell: pwsh
-        run: dotnet restore AssistenteICP.sln --locked-mode
+        run: dotnet restore GerenciadorICPBrasil.sln --locked-mode
 
       - name: Build
         shell: pwsh
-        run: dotnet build AssistenteICP.sln -c Release --no-restore
+        run: dotnet build GerenciadorICPBrasil.sln -c Release --no-restore
 
       - name: Tests
         shell: pwsh

@@ -1,6 +1,6 @@
 # Avisos e marcas
 
-Assistente ICP
+Gerenciador ICP Brasil
 
 Copyright 2026 Rede ICP Brasil contributors.
 

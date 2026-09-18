@@ -108,7 +108,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         $"Versão {typeof(MainViewModel).Assembly.GetName().Version?.ToString(4) ?? "não identificada"}";
 
     public string AboutSummaryText =>
-        "O Assistente ICP reúne verificações, orientações e ferramentas para preparar estações Windows que utilizam certificados digitais, mídias criptográficas, leitoras e biometria.";
+        "O Gerenciador ICP Brasil reúne verificações, orientações e ferramentas para preparar estações Windows que utilizam certificados digitais, mídias criptográficas, leitoras e biometria.";
 
     public string StatusText
     {

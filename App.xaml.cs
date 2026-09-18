@@ -105,7 +105,7 @@ namespace GerenciadorIcpBrasil
                 var runInBackground = IsBackgroundStartupRequested(e.Arguments);
                 window ??= new Window();
                 MainWindow = window;
-                window.Title = "Assistente ICP";
+                window.Title = "Gerenciador ICP Brasil";
                 window.Closed -= OnMainWindowClosed;
                 window.Closed += OnMainWindowClosed;
                 TryApplyBackdrop(window);
@@ -356,7 +356,7 @@ namespace GerenciadorIcpBrasil
 
             try
             {
-                _ = AppendMenu(menu, MfString, WmCommandOpen, "Abrir o Assistente ICP");
+                _ = AppendMenu(menu, MfString, WmCommandOpen, "Abrir o Gerenciador ICP Brasil");
                 _ = AppendMenu(menu, MfSeparator, 0, null);
 
                 var isRunning = IsPortOpen(PortToCheck);
@@ -837,7 +837,7 @@ namespace GerenciadorIcpBrasil
                 hWnd = hwnd,
                 uID = 1,
                 uCallbackMessage = WmTrayIcon,
-                szTip = "Assistente ICP",
+                szTip = "Gerenciador ICP Brasil",
                 szInfo = string.Empty,
                 szInfoTitle = string.Empty,
             };

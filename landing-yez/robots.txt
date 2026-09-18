@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://yez.digital/assistente-icp/sitemap.xml
+Sitemap: https://yez.digital/gerenciador-icp-brasil/sitemap.xml

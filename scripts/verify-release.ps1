@@ -43,7 +43,7 @@ foreach ($binary in $ownedBinaries)
     }
 
     $versionInfo = (Get-Item -LiteralPath $binary).VersionInfo
-    if ($versionInfo.ProductName -ne 'Assistente ICP')
+    if ($versionInfo.ProductName -ne 'Gerenciador ICP Brasil')
     {
         throw "ProductName inesperado em ${binary}: $($versionInfo.ProductName)"
     }
