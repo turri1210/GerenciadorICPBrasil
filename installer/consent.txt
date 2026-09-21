@@ -7,8 +7,8 @@ Privacidade
 
 Alterações no computador
 - Ações administrativas são executadas somente após solicitação do usuário e confirmação pelo Controle de Conta de Usuário do Windows.
-- O instalador pode baixar componentes oficiais da Microsoft necessários à execução, como WebView2, Windows App Runtime e .NET Desktop Runtime.
+- O .NET e o Windows App SDK necessários à execução acompanham o Gerenciador ICP Brasil e não são baixados nem instalados separadamente.
 - Algumas funcionalidades opcionais exigem programas, drivers ou SDKs de terceiros que não fazem parte deste projeto e estão sujeitos às licenças de seus respectivos fornecedores.
 - Todas as funcionalidades do Gerenciador ICP Brasil são atualizadas em conjunto; não existem pacotes de atualização separados.
 
-Ao prosseguir, o usuário confirma que leu estas informações e autoriza a instalação do Gerenciador ICP Brasil e de seus pré-requisitos oficiais.
+Ao prosseguir, o usuário confirma que leu estas informações e autoriza a instalação do Gerenciador ICP Brasil.

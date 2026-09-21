@@ -73,6 +73,7 @@ var releaseVerifier = File.ReadAllText(Path.Combine(root, "scripts", "verify-rel
 var mainProject = File.ReadAllText(Path.Combine(root, "GerenciadorIcpBrasil.csproj"));
 var elevatedProject = File.ReadAllText(Path.Combine(root, "Helpers", "ElevatedConfiguration", "ConfigAuditoria.csproj"));
 var installerScript = File.ReadAllText(Path.Combine(root, "installer", "GerenciadorICPBrasil.iss"));
+var installerConsent = File.ReadAllText(Path.Combine(root, "installer", "consent.txt"));
 var signPathApplication = File.ReadAllText(Path.Combine(root, ".signpath", "artifact-configurations", "application-v1.xml"));
 var signPathInstaller = File.ReadAllText(Path.Combine(root, ".signpath", "artifact-configurations", "installer-v1.xml"));
 var launchSettings = File.ReadAllText(Path.Combine(root, "Properties", "launchSettings.json"));
@@ -131,6 +132,8 @@ Check(failures, !installerScript.Contains("PrepareToInstall", StringComparison.O
 Check(failures, !installerScript.Contains("WebView2BootstrapperUrl", StringComparison.Ordinal), "O instalador ainda baixa o WebView2 Runtime.");
 Check(failures, !installerScript.Contains("WindowsAppRuntimeInstallerUrl", StringComparison.Ordinal), "O instalador ainda baixa o Windows App Runtime.");
 Check(failures, !installerScript.Contains("DotNetDesktopRuntimeInstallerUrl", StringComparison.Ordinal), "O instalador ainda baixa o .NET Desktop Runtime.");
+Check(failures, installerConsent.Contains("não são baixados nem instalados separadamente", StringComparison.Ordinal), "O termo de aceite não informa a distribuição self-contained.");
+Check(failures, !installerConsent.Contains("autoriza a instalação do Gerenciador ICP Brasil e de seus pré-requisitos", StringComparison.Ordinal), "O termo de aceite ainda solicita autorização para instalar pré-requisitos externos.");
 Check(failures, installerManager.Contains("AuthenticodeVerifier.VerifyTrustedSignature", StringComparison.Ordinal), "O gerenciador executa instaladores sem validar a assinatura Authenticode.");
 Check(failures, installerManager.Contains("FileShare.Read", StringComparison.Ordinal), "O gerenciador não bloqueia a troca do instalador entre validação e execução.");
 Check(failures, installerCatalog.Contains("ExpectedPublisherNames", StringComparison.Ordinal), "O catálogo não vincula os instaladores aos editores esperados.");
