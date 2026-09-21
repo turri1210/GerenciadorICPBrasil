@@ -125,6 +125,7 @@ Check(failures, installerScript.Contains("Get-AuthenticodeSignature", StringComp
 Check(failures, installerScript.Contains("Result := EnsurePrerequisitesInstalled(NeedsRestart);", StringComparison.Ordinal), "O instalador não executa a verificação dos pré-requisitos.");
 Check(failures, installerScript.Contains("EnsureProtectedWorkDirectory", StringComparison.Ordinal) && !installerScript.Contains("{tmp}\\gerenciador_prereq", StringComparison.OrdinalIgnoreCase), "Os scripts privilegiados do instalador ainda usam uma pasta temporária gravável pelo usuário.");
 Check(failures, installerScript.Contains("[System.IO.FileShare]::Read", StringComparison.Ordinal), "O instalador não bloqueia a troca dos pré-requisitos após validar a assinatura.");
+Check(failures, installerScript.Contains("GetDateTimeString('yyyymmddhhnnsszzz', '-', ':')", StringComparison.Ordinal), "A criação da pasta protegida usa separadores incompatíveis com o tipo Char do Inno Setup.");
 Check(failures, installerManager.Contains("AuthenticodeVerifier.VerifyTrustedSignature", StringComparison.Ordinal), "O gerenciador executa instaladores sem validar a assinatura Authenticode.");
 Check(failures, installerManager.Contains("FileShare.Read", StringComparison.Ordinal), "O gerenciador não bloqueia a troca do instalador entre validação e execução.");
 Check(failures, installerCatalog.Contains("ExpectedPublisherNames", StringComparison.Ordinal), "O catálogo não vincula os instaladores aos editores esperados.");

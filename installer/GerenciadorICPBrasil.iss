@@ -95,7 +95,7 @@ begin
   begin
     ProtectedWorkDirectory :=
       ExpandConstant('{commonappdata}\Gerenciador ICP Brasil\installer-cache\') +
-      GetDateTimeString('yyyymmddhhnnsszzz', '', '');
+      GetDateTimeString('yyyymmddhhnnsszzz', '-', ':');
 
     if not ForceDirectories(ProtectedWorkDirectory) then
     begin
