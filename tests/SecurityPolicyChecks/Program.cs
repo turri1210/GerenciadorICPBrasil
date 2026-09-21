@@ -71,6 +71,15 @@ var certificateBridgeService = File.ReadAllText(Path.Combine(root, "Services", "
 var releaseScript = File.ReadAllText(Path.Combine(root, "scripts", "build-release.ps1"));
 var releaseVerifier = File.ReadAllText(Path.Combine(root, "scripts", "verify-release.ps1"));
 var mainProject = File.ReadAllText(Path.Combine(root, "GerenciadorIcpBrasil.csproj"));
+var installerScript = File.ReadAllText(Path.Combine(root, "installer", "GerenciadorICPBrasil.iss"));
+var signPathApplication = File.ReadAllText(Path.Combine(root, ".signpath", "artifact-configurations", "application-v1.xml"));
+var signPathInstaller = File.ReadAllText(Path.Combine(root, ".signpath", "artifact-configurations", "installer-v1.xml"));
+var launchSettings = File.ReadAllText(Path.Combine(root, "Properties", "launchSettings.json"));
+var landingPage = File.ReadAllText(Path.Combine(root, "landing-yez", "index.html"));
+var ciWorkflow = File.ReadAllText(Path.Combine(root, ".github", "workflows", "ci.yml"));
+var releaseWorkflow = File.ReadAllText(Path.Combine(root, ".github", "workflows", "release.yml"));
+var installerManager = File.ReadAllText(Path.Combine(root, "Features", "InstallerLauncher", "Services", "InstallerManager.cs"));
+var installerCatalog = File.ReadAllText(Path.Combine(root, "Features", "InstallerLauncher", "Services", "InstallerCatalogService.cs"));
 
 Check(failures, mainManifest.Contains("requestedExecutionLevel level=\"asInvoker\"", StringComparison.Ordinal), "O app principal não está marcado como asInvoker.");
 Check(failures, helperManifest.Contains("requestedExecutionLevel level=\"requireAdministrator\"", StringComparison.Ordinal), "O helper não está marcado como requireAdministrator.");
@@ -92,16 +101,37 @@ Check(failures, !backupService.Contains("HttpClient", StringComparison.Ordinal),
 Check(failures, !auditService.Contains("HttpClient", StringComparison.Ordinal), "A auditoria ainda contém envio pela rede.");
 Check(failures, updateService.Contains("AuthenticodeVerifier.VerifyOfficialRelease", StringComparison.Ordinal), "O atualizador não valida a assinatura do instalador.");
 Check(failures, updateService.Contains("ValidateHashAsync", StringComparison.Ordinal), "O atualizador não valida o SHA-256 do instalador.");
+Check(failures, updateService.Contains("ValidateDownloadUri", StringComparison.Ordinal), "O atualizador não restringe o endereço do instalador.");
+Check(failures, File.ReadAllText(Path.Combine(root, "Services", "AuthenticodeVerifier.cs")).Contains("Gerenciador ICP Brasil", StringComparison.Ordinal), "A assinatura da atualização não é vinculada ao produto.");
 Check(failures, !File.Exists(Path.Combine(root, "modules.json")), "O catálogo remoto de módulos ainda existe.");
 Check(failures, !moduleCatalogService.Contains("HttpClient", StringComparison.Ordinal), "O catálogo de funcionalidades ainda acessa atualizações remotas.");
 Check(failures, !moduleCatalogService.Contains("packageUrl", StringComparison.OrdinalIgnoreCase), "O catálogo ainda contém pacotes independentes.");
 Check(failures, certificateBridgeService.Contains("http://127.0.0.1", StringComparison.Ordinal), "A ponte de certificados não está limitada ao endereço local.");
 Check(failures, certificateBridgeService.Contains("IsAllowedOrigin", StringComparison.Ordinal), "A ponte de certificados não valida a origem do navegador.");
+Check(failures, certificateBridgeService.Contains("if (string.IsNullOrWhiteSpace(origin))", StringComparison.Ordinal) && certificateBridgeService.Contains("return false;", StringComparison.Ordinal), "A ponte de certificados ainda aceita requisições sem origem.");
+Check(failures, certificateBridgeService.Contains("TryNormalizeChallenge", StringComparison.Ordinal), "A assinatura local não exige um desafio criptográfico.");
+Check(failures, !File.ReadAllText(Path.Combine(root, "Helpers", "CertificateSelector", "Program.cs")).Contains("autenticacao-certificado", StringComparison.Ordinal), "O seletor ainda assina um texto fixo reutilizável.");
 Check(failures, releaseScript.Contains("Helpers\\ElevatedConfiguration", StringComparison.Ordinal), "O build unificado não publica o executor administrativo.");
 Check(failures, releaseScript.Contains("Helpers\\CertificateSelector", StringComparison.Ordinal), "O build unificado não publica o seletor de certificados.");
 Check(failures, mainProject.Contains("CopyWinUiResourcesToPublish", StringComparison.Ordinal), "O projeto não publica os recursos WinUI compilados.");
 Check(failures, releaseVerifier.Contains("GerenciadorIcpBrasil.pri", StringComparison.Ordinal), "A validação não exige o índice de recursos WinUI.");
 Check(failures, releaseVerifier.Contains("Views\\MainPage.xbf", StringComparison.Ordinal), "A validação não exige o XAML compilado da tela principal.");
+Check(failures, installerScript.Contains("AppPublisher=Rede ICP Brasil", StringComparison.Ordinal), "O instalador não informa o editor Rede ICP Brasil.");
+Check(failures, !signPathApplication.Contains("Assistente ICP", StringComparison.OrdinalIgnoreCase), "A configuração SignPath do aplicativo ainda usa o nome antigo.");
+Check(failures, !signPathInstaller.Contains("Assistente ICP", StringComparison.OrdinalIgnoreCase), "A configuração SignPath do instalador ainda usa o nome antigo.");
+Check(failures, !launchSettings.Contains("MsixPackage", StringComparison.OrdinalIgnoreCase), "O perfil de execução ainda oferece empacotamento MSIX.");
+Check(failures, !landingPage.Contains("Microsoft Store", StringComparison.OrdinalIgnoreCase), "A página pública ainda menciona a Microsoft Store.");
+Check(failures, installerScript.Contains("Get-AuthenticodeSignature", StringComparison.Ordinal), "O instalador não valida a assinatura dos pré-requisitos baixados.");
+Check(failures, installerScript.Contains("Result := EnsurePrerequisitesInstalled(NeedsRestart);", StringComparison.Ordinal), "O instalador não executa a verificação dos pré-requisitos.");
+Check(failures, installerScript.Contains("EnsureProtectedWorkDirectory", StringComparison.Ordinal) && !installerScript.Contains("{tmp}\\gerenciador_prereq", StringComparison.OrdinalIgnoreCase), "Os scripts privilegiados do instalador ainda usam uma pasta temporária gravável pelo usuário.");
+Check(failures, installerScript.Contains("[System.IO.FileShare]::Read", StringComparison.Ordinal), "O instalador não bloqueia a troca dos pré-requisitos após validar a assinatura.");
+Check(failures, installerManager.Contains("AuthenticodeVerifier.VerifyTrustedSignature", StringComparison.Ordinal), "O gerenciador executa instaladores sem validar a assinatura Authenticode.");
+Check(failures, installerManager.Contains("FileShare.Read", StringComparison.Ordinal), "O gerenciador não bloqueia a troca do instalador entre validação e execução.");
+Check(failures, installerCatalog.Contains("ExpectedPublisherNames", StringComparison.Ordinal), "O catálogo não vincula os instaladores aos editores esperados.");
+Check(failures, !installerCatalog.Contains("AutomaticInstallerPath: \"winget.exe\"", StringComparison.Ordinal), "O Java ainda executa um winget não qualificado.");
+Check(failures, updateService.Contains("using var executionLock", StringComparison.Ordinal), "O atualizador não bloqueia a troca do arquivo após a validação.");
+Check(failures, !ciWorkflow.Contains("uses: actions/checkout@v", StringComparison.Ordinal) && !ciWorkflow.Contains("uses: actions/setup-dotnet@v", StringComparison.Ordinal), "O CI usa ações referenciadas por tags mutáveis.");
+Check(failures, !releaseWorkflow.Contains("uses: actions/checkout@v", StringComparison.Ordinal) && !releaseWorkflow.Contains("uses: actions/setup-dotnet@v", StringComparison.Ordinal) && !releaseWorkflow.Contains("uses: actions/upload-artifact@v", StringComparison.Ordinal) && !releaseWorkflow.Contains("uses: signpath/github-action-submit-signing-request@v", StringComparison.Ordinal), "A release usa ações referenciadas por tags mutáveis.");
 
 if (failures.Count > 0)
 {

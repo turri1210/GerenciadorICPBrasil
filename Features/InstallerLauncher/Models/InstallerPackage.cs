@@ -16,4 +16,5 @@ public sealed record InstallerPackage(
     string[]? AutomaticInstallerArguments = null,
     int Sequence = 0,
     bool RequiresElevation = true,
-    bool RequiresManualConfirmation = false);
+    bool RequiresManualConfirmation = false,
+    string[]? ExpectedPublisherNames = null);

@@ -54,6 +54,8 @@ A edição pública não envia telemetria, hostname, endereço MAC ou arquivos d
 
 Não coloque certificados, senhas, tokens ou chaves de API no repositório. Vulnerabilidades devem ser comunicadas conforme [SECURITY.md](SECURITY.md).
 
+A integração de assinatura em `127.0.0.1` aceita somente origens autorizadas. Cada chamada a `/assinar` deve enviar um `challenge` Base64 aleatório, com pelo menos 16 bytes, emitido pelo servidor e consumido uma única vez. O servidor é responsável por vincular o desafio à sessão, origem, finalidade e prazo de validade e por rejeitar reutilizações.
+
 ## Code signing policy
 
 Free code signing provided by SignPath.io, certificate by SignPath Foundation.

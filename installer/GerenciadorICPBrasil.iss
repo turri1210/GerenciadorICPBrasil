@@ -12,6 +12,7 @@
 AppId=Gerenciador ICP Brasil
 AppName=Gerenciador ICP Brasil
 AppVersion={#AppVersion}
+AppPublisher=Rede ICP Brasil
 DefaultDirName={autopf}\Gerenciador ICP Brasil
 DefaultGroupName=Gerenciador ICP Brasil
 DisableDirPage=yes
@@ -50,9 +51,9 @@ VersionInfoDescription=Instalador do Gerenciador ICP Brasil
 Name: "ptbr"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 
 [Messages]
-ptbr.WizardLicense=Acordo de Licenca
-ptbr.LicenseLabel=Leia atentamente as informacoes a seguir antes de continuar.
-ptbr.LicenseLabel3=Voce deve aceitar os termos do acordo para prosseguir com a instalacao.
+ptbr.WizardLicense=Acordo de Licença
+ptbr.LicenseLabel=Leia atentamente as informações a seguir antes de continuar.
+ptbr.LicenseLabel3=Você deve aceitar os termos do acordo para prosseguir com a instalação.
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
@@ -82,6 +83,39 @@ Filename: "{app}\GerenciadorIcpBrasil.exe"; Description: "Abrir Gerenciador ICP 
 var
   PrereqPage: TOutputProgressWizardPage;
   PrereqRequestedRestart: Boolean;
+  ProtectedWorkDirectory: string;
+
+function EnsureProtectedWorkDirectory(): Boolean;
+var
+  AclExitCode: Integer;
+  AclParams: string;
+begin
+  Result := False;
+  if ProtectedWorkDirectory = '' then
+  begin
+    ProtectedWorkDirectory :=
+      ExpandConstant('{commonappdata}\Gerenciador ICP Brasil\installer-cache\') +
+      GetDateTimeString('yyyymmddhhnnsszzz', '', '');
+
+    if not ForceDirectories(ProtectedWorkDirectory) then
+    begin
+      ProtectedWorkDirectory := '';
+      exit;
+    end;
+
+    AclParams := '"' + ProtectedWorkDirectory + '" /inheritance:r /grant:r ' +
+      '*S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F';
+    if (not Exec(ExpandConstant('{sys}\icacls.exe'), AclParams, '', SW_HIDE,
+      ewWaitUntilTerminated, AclExitCode)) or (AclExitCode <> 0) then
+    begin
+      DelTree(ProtectedWorkDirectory, True, True, True);
+      ProtectedWorkDirectory := '';
+      exit;
+    end;
+  end;
+
+  Result := True;
+end;
 
 procedure InitializeWizard();
 begin
@@ -98,7 +132,7 @@ begin
   end;
 
   PrereqPage.SetProgress(Completed, Total);
-  PrereqPage.SetText(StatusText, Format('Concluido %d de %d.', [Completed, Total]));
+  PrereqPage.SetText(StatusText, Format('Concluído %d de %d.', [Completed, Total]));
 end;
 
 function WritePrereqCheckScript(const CheckId: string): string;
@@ -106,7 +140,13 @@ var
   ScriptPath: string;
   ScriptText: string;
 begin
-  ScriptPath := ExpandConstant('{tmp}\gerenciador_prereq_check.ps1');
+  if not EnsureProtectedWorkDirectory() then
+  begin
+    Result := '';
+    exit;
+  end;
+
+  ScriptPath := ProtectedWorkDirectory + '\gerenciador_prereq_check.ps1';
 
   if CompareText(CheckId, 'webview2') = 0 then
   begin
@@ -199,6 +239,10 @@ var
 begin
   Result := False;
   ScriptPath := WritePrereqCheckScript(CheckId);
+  if ScriptPath = '' then
+  begin
+    exit;
+  end;
   Params := '-NoProfile -ExecutionPolicy Bypass -File "' + ScriptPath + '"';
   if not Exec('powershell.exe', Params, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
   begin
@@ -212,15 +256,31 @@ var
   ScriptPath: string;
   ScriptText: string;
 begin
-  ScriptPath := ExpandConstant('{tmp}\gerenciador_prereq_install.ps1');
+  if not EnsureProtectedWorkDirectory() then
+  begin
+    Result := '';
+    exit;
+  end;
+
+  ScriptPath := ProtectedWorkDirectory + '\gerenciador_prereq_install.ps1';
   ScriptText :=
-    'param([string]$Url,[string]$FileName)' + #13#10 +
+    'param([string]$Url,[string]$FileName,[string]$CacheDirectory)' + #13#10 +
     '$ErrorActionPreference = "Stop"' + #13#10 +
-    '$target = Join-Path $env:TEMP $FileName' + #13#10 +
+    '$target = Join-Path $CacheDirectory $FileName' + #13#10 +
     'Invoke-WebRequest -Uri $Url -OutFile $target -UseBasicParsing' + #13#10 +
-    '$args = ' + InstallArgsLiteral + #13#10 +
-    '$p = Start-Process -FilePath $target -ArgumentList $args -Wait -PassThru -WindowStyle Hidden' + #13#10 +
-    'exit $p.ExitCode' + #13#10;
+    '$lock = [System.IO.File]::Open($target, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::Read)' + #13#10 +
+    'try {' + #13#10 +
+    '  $signature = Get-AuthenticodeSignature -FilePath $target' + #13#10 +
+    '  $publisher = if ($signature.SignerCertificate) { $signature.SignerCertificate.GetNameInfo([System.Security.Cryptography.X509Certificates.X509NameType]::SimpleName, $false) } else { "" }' + #13#10 +
+    '  if ($signature.Status -ne [System.Management.Automation.SignatureStatus]::Valid -or $publisher -ne "Microsoft Corporation") {' + #13#10 +
+    '    throw "O complemento baixado não possui assinatura válida da Microsoft Corporation."' + #13#10 +
+    '  }' + #13#10 +
+    '  $args = ' + InstallArgsLiteral + #13#10 +
+    '  $p = Start-Process -FilePath $target -ArgumentList $args -Wait -PassThru -WindowStyle Hidden' + #13#10 +
+    '  exit $p.ExitCode' + #13#10 +
+    '} finally {' + #13#10 +
+    '  $lock.Dispose()' + #13#10 +
+    '}' + #13#10;
   SaveStringToFile(ScriptPath, ScriptText, False);
   Result := ScriptPath;
 end;
@@ -231,9 +291,16 @@ var
   Params: string;
 begin
   ScriptPath := WritePrereqInstallScript(InstallArgsLiteral);
+  if ScriptPath = '' then
+  begin
+    InstallExitCode := -1;
+    Result := False;
+    exit;
+  end;
   Params := '-NoProfile -ExecutionPolicy Bypass -File "' + ScriptPath + '" ' +
     '-Url "' + Url + '" ' +
-    '-FileName "' + FileName + '"';
+    '-FileName "' + FileName + '" ' +
+    '-CacheDirectory "' + ProtectedWorkDirectory + '"';
   Result := Exec('powershell.exe', Params, '', SW_HIDE, ewWaitUntilTerminated, InstallExitCode);
 end;
 
@@ -272,7 +339,7 @@ begin
   UpdatePrereqProgress(CompletedBefore, TotalCount, 'Verificando ' + DisplayName + '...');
   if IsPrerequisiteInstalled(CheckId) then
   begin
-    UpdatePrereqProgress(CompletedBefore + 1, TotalCount, DisplayName + ' ja esta instalado.');
+    UpdatePrereqProgress(CompletedBefore + 1, TotalCount, DisplayName + ' já está instalado.');
     Result := '';
     exit;
   end;
@@ -280,13 +347,13 @@ begin
   UpdatePrereqProgress(CompletedBefore, TotalCount, 'Instalando ' + DisplayName + '...');
   if not InstallPrerequisite(DownloadUrl, DownloadFileName, InstallArgsLiteral, InstallExitCode) then
   begin
-    Result := 'Nao foi possivel iniciar a instalacao de ' + DisplayName + '.';
+    Result := 'Não foi possível iniciar a instalação de ' + DisplayName + '.';
     exit;
   end;
 
   if (InstallExitCode <> 0) and (InstallExitCode <> 3010) and (InstallExitCode <> 1641) then
   begin
-    Result := DisplayName + ' retornou codigo de saida ' + IntToStr(InstallExitCode) + '.';
+    Result := DisplayName + ' retornou código de saída ' + IntToStr(InstallExitCode) + '.';
     exit;
   end;
 
@@ -297,7 +364,7 @@ begin
 
   if not WaitForPrerequisiteInstalled(CheckId, 12, 5000) then
   begin
-    Result := 'A instalacao de ' + DisplayName + ' foi executada, mas nao foi possivel confirmar o componente.';
+    Result := 'A instalação de ' + DisplayName + ' foi executada, mas não foi possível confirmar o componente.';
     exit;
   end;
 
@@ -317,7 +384,7 @@ begin
   if PrereqPage <> nil then
   begin
     PrereqPage.SetProgress(0, TotalPrereq);
-    PrereqPage.SetText('Iniciando verificacao de complementos...', 'Concluido 0 de 3.');
+    PrereqPage.SetText('Iniciando verificação de complementos...', 'Concluído 0 de 3.');
     PrereqPage.Show();
   end;
 
@@ -373,8 +440,7 @@ end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
-  NeedsRestart := False;
-  Result := '';
+  Result := EnsurePrerequisitesInstalled(NeedsRestart);
 end;
 
 function WriteAuditScript(): string;
@@ -382,7 +448,13 @@ var
   ScriptPath: string;
   ScriptText: string;
 begin
-  ScriptPath := ExpandConstant('{tmp}\gerenciador_audit.ps1');
+  if not EnsureProtectedWorkDirectory() then
+  begin
+    Result := '';
+    exit;
+  end;
+
+  ScriptPath := ProtectedWorkDirectory + '\gerenciador_audit.ps1';
   ScriptText :=
     'param([string]$EventType,[string]$AppVersion)' + #13#10 +
     '$ErrorActionPreference = "SilentlyContinue"' + #13#10 +
@@ -431,10 +503,30 @@ var
   ResultCode: Integer;
 begin
   ScriptPath := WriteAuditScript();
+  if ScriptPath = '' then
+  begin
+    exit;
+  end;
   Params := '-NoProfile -ExecutionPolicy Bypass -File "' + ScriptPath + '" ' +
     '-EventType "' + EventType + '" ' +
     '-AppVersion "{#SetupSetting("AppVersion")}"';
   Exec('powershell.exe', Params, '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
+procedure DeinitializeSetup();
+begin
+  if ProtectedWorkDirectory <> '' then
+  begin
+    DelTree(ProtectedWorkDirectory, True, True, True);
+  end;
+end;
+
+procedure DeinitializeUninstall();
+begin
+  if ProtectedWorkDirectory <> '' then
+  begin
+    DelTree(ProtectedWorkDirectory, True, True, True);
+  end;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);

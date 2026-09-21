@@ -8,6 +8,8 @@ namespace GerenciadorIcpBrasil.Services;
 
 public sealed class AppUpdateService
 {
+    private static readonly Uri OfficialReleaseBaseUri = new("https://sistema.redeicpbrasil.com.br/gerenciador/");
+
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -108,6 +110,8 @@ public sealed class AppUpdateService
             return AppUpdateApplyResult.Fail("A URL da atualização não foi informada.");
         }
 
+        ValidateDownloadUri(update.DownloadUrl);
+
         var tempRoot = Path.Combine(Path.GetTempPath(), "gerenciador-icp-brasil", "app-update", update.LatestVersion);
         var installerPath = Path.Combine(tempRoot, $"GerenciadorICPBrasilSetup-{update.LatestVersion}.exe");
         Directory.CreateDirectory(tempRoot);
@@ -118,12 +122,14 @@ public sealed class AppUpdateService
             {
                 using var response = await http.GetAsync(update.DownloadUrl, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
+                ValidateDownloadUri(response.RequestMessage?.RequestUri?.AbsoluteUri);
 
                 await using var networkStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 await using var fileStream = new FileStream(installerPath, FileMode.Create, FileAccess.Write, FileShare.None);
                 await networkStream.CopyToAsync(fileStream).ConfigureAwait(false);
             }
 
+            using var executionLock = new FileStream(installerPath, FileMode.Open, FileAccess.Read, FileShare.Read);
             if (IsZipArchive(installerPath))
             {
                 return AppUpdateApplyResult.Fail("A URL da atualização aponta para um ZIP. Configure o app-version.json com o instalador (.exe).");
@@ -132,15 +138,13 @@ public sealed class AppUpdateService
             await ValidateHashAsync(installerPath, update.Sha256).ConfigureAwait(false);
             AuthenticodeVerifier.VerifyOfficialRelease(installerPath);
 
-            var startInfo = new ProcessStartInfo
+            var started = Process.Start(new ProcessStartInfo
             {
                 FileName = installerPath,
                 UseShellExecute = true,
                 Verb = "runas",
                 WorkingDirectory = tempRoot
-            };
-
-            var started = Process.Start(startInfo);
+            });
 
             if (started == null)
             {
@@ -179,6 +183,20 @@ public sealed class AppUpdateService
             && signature[1] == (byte)'K'
             && signature[2] == 0x03
             && signature[3] == 0x04;
+    }
+
+    private static void ValidateDownloadUri(string? value)
+    {
+        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) ||
+            uri.Scheme != Uri.UriSchemeHttps ||
+            !uri.Host.Equals(OfficialReleaseBaseUri.Host, StringComparison.OrdinalIgnoreCase) ||
+            uri.Port != 443 ||
+            !uri.AbsolutePath.StartsWith(OfficialReleaseBaseUri.AbsolutePath, StringComparison.Ordinal) ||
+            !uri.AbsolutePath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ||
+            !string.IsNullOrEmpty(uri.UserInfo))
+        {
+            throw new InvalidOperationException("A atualização deve usar o endereço HTTPS oficial do Gerenciador ICP Brasil.");
+        }
     }
 
     private static async Task ValidateHashAsync(string filePath, string? expectedHash)

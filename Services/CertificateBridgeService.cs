@@ -131,7 +131,7 @@ public sealed class CertificateBridgeService : IAsyncDisposable
     {
         if (string.IsNullOrWhiteSpace(origin))
         {
-            return true;
+            return false;
         }
 
         if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri) ||
@@ -171,9 +171,10 @@ public sealed class CertificateBridgeService : IAsyncDisposable
             return Results.Json(new { erro = "Requisição inválida." }, statusCode: 400);
         }
 
-        if (request is null || request.Index < 0)
+        if (request is null || request.Index < 0 ||
+            !TryNormalizeChallenge(request.Challenge, out var normalizedChallenge))
         {
-            return Results.Json(new { erro = "Índice inválido." }, statusCode: 400);
+            return Results.Json(new { erro = "Índice ou desafio criptográfico inválido." }, statusCode: 400);
         }
 
         if (!await _signatureLock.WaitAsync(0, cancellationToken).ConfigureAwait(false))
@@ -183,7 +184,9 @@ public sealed class CertificateBridgeService : IAsyncDisposable
 
         try
         {
-            var result = await RunCertificateSelectorAsync(new[] { request.Index.ToString() }, cancellationToken).ConfigureAwait(false);
+            var result = await RunCertificateSelectorAsync(
+                new[] { "--sign", request.Index.ToString(), normalizedChallenge },
+                cancellationToken).ConfigureAwait(false);
             return result.Success
                 ? Results.Text(result.Output, "application/json", Encoding.UTF8)
                 : Results.Json(new { erro = "Erro ao assinar com o certificado.", detalhe = result.Error }, statusCode: 500);
@@ -304,7 +307,32 @@ public sealed class CertificateBridgeService : IAsyncDisposable
         }
     }
 
-    private sealed record SignatureRequest(int Index);
+    private static bool TryNormalizeChallenge(string? challenge, out string normalized)
+    {
+        normalized = string.Empty;
+        if (string.IsNullOrWhiteSpace(challenge) || challenge.Length > 8192)
+        {
+            return false;
+        }
+
+        try
+        {
+            var bytes = Convert.FromBase64String(challenge);
+            if (bytes.Length is < 16 or > 4096)
+            {
+                return false;
+            }
+
+            normalized = Convert.ToBase64String(bytes);
+            return true;
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+    }
+
+    private sealed record SignatureRequest(int Index, string? Challenge);
     private sealed record BiometricRequest(int TimeoutMs);
     private sealed record ProcessResult(bool Success, string Output, string Error);
 }

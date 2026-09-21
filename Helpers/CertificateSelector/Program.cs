@@ -120,7 +120,10 @@ class Program
             return;
         }
 
-        if (args.Length == 1 && int.TryParse(args[0], out int index))
+        if (args.Length == 3 &&
+            args[0] == "--sign" &&
+            int.TryParse(args[1], out int index) &&
+            TryDecodeChallenge(args[2], out byte[] dados))
         {
             var item = certificadosFiltrados.FirstOrDefault(x => x.index + 1 == index);
             if (item == null)
@@ -142,8 +145,6 @@ class Program
             bool revogado = chain.ChainStatus.Any(s => s.Status == X509ChainStatusFlags.Revoked);
 
             // ===== Assinatura (força PIN no A3 também)
-            string textoParaAssinar = "autenticacao-certificado";
-            byte[] dados = Encoding.UTF8.GetBytes(textoParaAssinar);
             byte[]? assinatura = null;
 
             try
@@ -177,7 +178,7 @@ class Program
                 cadeiaValida,
                 revogado,
                 assinatura = Convert.ToBase64String(assinatura ?? Array.Empty<byte>()),
-                dadoOriginal = textoParaAssinar,
+                dadoOriginal = Convert.ToBase64String(dados),
                 // ---- Campos novos/ajudantes ----
                 isHardware = isA3,          // compat: consideramos A3 quando política disser A3 ou provider for hardware
                 tipoCert,
@@ -245,6 +246,26 @@ class Program
         }
 
         return list.Distinct().ToList();
+    }
+
+    static bool TryDecodeChallenge(string value, out byte[] challenge)
+    {
+        challenge = Array.Empty<byte>();
+        if (string.IsNullOrWhiteSpace(value) || value.Length > 8192)
+        {
+            return false;
+        }
+
+        try
+        {
+            challenge = Convert.FromBase64String(value);
+            return challenge.Length is >= 16 and <= 4096;
+        }
+        catch (FormatException)
+        {
+            challenge = Array.Empty<byte>();
+            return false;
+        }
     }
 
     /// <summary>

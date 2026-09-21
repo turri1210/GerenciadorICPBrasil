@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using GerenciadorIcpBrasil.Modules.InstallerLauncher.Models;
+using GerenciadorIcpBrasil.Services;
 
 namespace GerenciadorIcpBrasil.Modules.InstallerLauncher.Services;
 
@@ -57,7 +58,26 @@ public sealed class InstallerManager
             return false;
         }
 
-        return await ExecuteInstallerAsync(package, installerPath, cancellationToken).ConfigureAwait(false);
+        FileStream? executionLock = null;
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(installerPath))
+            {
+                executionLock = new FileStream(installerPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                if (package.ExpectedPublisherNames is null || package.ExpectedPublisherNames.Length == 0)
+                {
+                    throw new InvalidOperationException($"O pacote {package.DisplayName} não possui uma política de editor confiável.");
+                }
+
+                AuthenticodeVerifier.VerifyTrustedSignature(installerPath, package.ExpectedPublisherNames);
+            }
+
+            return await ExecuteInstallerAsync(package, installerPath, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            executionLock?.Dispose();
+        }
     }
 
     public async Task<bool> DownloadOnlyAsync(

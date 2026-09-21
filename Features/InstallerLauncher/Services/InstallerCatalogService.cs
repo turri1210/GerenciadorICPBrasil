@@ -28,7 +28,8 @@ public static class InstallerCatalogService
                 DetectionNames: new[] { "Microsoft Visual C++ 2010  x86", "Microsoft Visual C++ 2010 x86", "Microsoft Visual C++ 2010 x86 Redistributable" },
                 InstallArguments: Array.Empty<string>(),
                 AutomaticInstallArguments: new[] { "/silent" },
-                Sequence: 1),
+                Sequence: 1,
+                ExpectedPublisherNames: new[] { "Microsoft Corporation" }),
             new(
                 Id: "bio-vcredist-2012",
                 DisplayName: "2 - Visual C++ 2012 x86",
@@ -39,7 +40,8 @@ public static class InstallerCatalogService
                 DetectionNames: new[] { "Microsoft Visual C++ 2012  x86", "Microsoft Visual C++ 2012 x86", "Microsoft Visual C++ 2012 x86 Redistributable" },
                 InstallArguments: Array.Empty<string>(),
                 AutomaticInstallArguments: new[] { "/quiet" },
-                Sequence: 2),
+                Sequence: 2,
+                ExpectedPublisherNames: new[] { "Microsoft Corporation" }),
             new(
                 Id: "bio-vcredist-2013",
                 DisplayName: "3 - Visual C++ 2013 x86",
@@ -50,7 +52,8 @@ public static class InstallerCatalogService
                 DetectionNames: new[] { "Microsoft Visual C++ 2013  x86", "Microsoft Visual C++ 2013 x86", "Microsoft Visual C++ 2013 x86 Redistributable" },
                 InstallArguments: Array.Empty<string>(),
                 AutomaticInstallArguments: new[] { "/quiet" },
-                Sequence: 3),
+                Sequence: 3,
+                ExpectedPublisherNames: new[] { "Microsoft Corporation" }),
             new(
                 Id: "bio-vcredist-2017",
                 DisplayName: "4 - Microsoft Visual C++ v14 x86",
@@ -61,7 +64,8 @@ public static class InstallerCatalogService
                 DetectionNames: new[] { "Microsoft Visual C++ v14 Redistributable (x86)", "Microsoft Visual C++ 2017 x86", "Microsoft Visual C++ 2015-2019 x86", "Microsoft Visual C++ 2015-2022 x86", "Microsoft Visual C++ 2022 X86" },
                 InstallArguments: Array.Empty<string>(),
                 AutomaticInstallArguments: new[] { "/quiet" },
-                Sequence: 4),
+                Sequence: 4,
+                ExpectedPublisherNames: new[] { "Microsoft Corporation" }),
             new(
                 Id: "bio-dotnet481",
                 DisplayName: "5 - .NET Framework 4.8.1",
@@ -72,7 +76,8 @@ public static class InstallerCatalogService
                 DetectionNames: new[] { ".NET Framework 4.8.1", "Microsoft .NET Framework 4.8.1", ".NET Framework 4.8" },
                 InstallArguments: Array.Empty<string>(),
                 AutomaticInstallArguments: new[] { "/q" },
-                Sequence: 5),
+                Sequence: 5,
+                ExpectedPublisherNames: new[] { "Microsoft Corporation" }),
             new(
                 Id: "bio-certiplugin",
                 DisplayName: "6 - CertiPlugin",
@@ -83,7 +88,8 @@ public static class InstallerCatalogService
                 DetectionNames: new[] { "CertiPlugin" },
                 InstallArguments: Array.Empty<string>(),
                 AutomaticInstallArguments: new[] { "/verysilent" },
-                Sequence: 6),
+                Sequence: 6,
+                ExpectedPublisherNames: new[] { "Certisign Certificadora Digital" }),
             new(
                 Id: "bio-certiplugin-browser",
                 DisplayName: "7 - Extensão CertiPlugin (Chrome/Edge)",
@@ -102,7 +108,8 @@ public static class InstallerCatalogService
                 DetectionNames: new[] { "BiometricLocalServicePlataform", "Biometric Local Service Plataform" },
                 InstallArguments: Array.Empty<string>(),
                 AutomaticInstallArguments: new[] { "/quiet" },
-                Sequence: 8),
+                Sequence: 8,
+                ExpectedPublisherNames: new[] { "Certisign", "Innovatrics" }),
             new(
                 Id: "driver-futronic",
                 DisplayName: "Driver Futronic FS88h",
@@ -114,7 +121,8 @@ public static class InstallerCatalogService
                 DetectionNames: new[] { "Futronic", "FS88", "FS88H" },
                 InstallArguments: Array.Empty<string>(),
                 AutomaticInstallArguments: new[] { "-silentinstall" },
-                Sequence: 9)
+                Sequence: 9,
+                ExpectedPublisherNames: new[] { "Futronic" })
         };
 
     public static IReadOnlyList<InstallerPackage> GetDriverPackages() =>
@@ -131,7 +139,8 @@ public static class InstallerCatalogService
                 InstallArguments: Array.Empty<string>(),
                 AutomaticInstallArguments: new[] { "/quiet" },
                 Sequence: 1,
-                RequiresManualConfirmation: true),
+                RequiresManualConfirmation: true,
+                ExpectedPublisherNames: new[] { "A.E.T.", "AET", "Certisign" }),
             new(
                 Id: "drv-safenet",
                 DisplayName: "SafeNet 10.6 x64",
@@ -143,7 +152,8 @@ public static class InstallerCatalogService
                 InstallArguments: Array.Empty<string>(),
                 AutomaticInstallArguments: new[] { "/passive" },
                 Sequence: 2,
-                RequiresManualConfirmation: true),
+                RequiresManualConfirmation: true,
+                ExpectedPublisherNames: new[] { "Gemalto", "Thales", "Certisign" }),
             new(
                 Id: "drv-awp",
                 DisplayName: "AWP Manager 5.1.8 x64",
@@ -154,7 +164,8 @@ public static class InstallerCatalogService
                 DetectionNames: new[] { "AWP Manager" },
                 InstallArguments: Array.Empty<string>(),
                 Sequence: 3,
-                RequiresManualConfirmation: true),
+                RequiresManualConfirmation: true,
+                ExpectedPublisherNames: new[] { "Oberthur", "IDEMIA", "Certisign" }),
             new(
                 Id: "drv-gemalto",
                 DisplayName: "Leitora Gemalto GEMPCTWIN USB",
@@ -166,7 +177,8 @@ public static class InstallerCatalogService
                 InstallArguments: Array.Empty<string>(),
                 AutomaticInstallArguments: new[] { "/quiet" },
                 Sequence: 4,
-                RequiresManualConfirmation: true),
+                RequiresManualConfirmation: true,
+                ExpectedPublisherNames: new[] { "Gemalto", "Thales", "Certisign" }),
             new(
                 Id: "drv-omnikey",
                 DisplayName: "Leitora Omnikey Cardman 3021",
@@ -177,7 +189,8 @@ public static class InstallerCatalogService
                 DetectionNames: new[] { "OMNIKEY", "CardMan" },
                 InstallArguments: Array.Empty<string>(),
                 Sequence: 5,
-                RequiresManualConfirmation: true),
+                RequiresManualConfirmation: true,
+                ExpectedPublisherNames: new[] { "HID Global", "HIDGLOBAL", "Certisign" }),
             new(
                 Id: "drv-scr3310",
                 DisplayName: "Leitora SCR3310 SCM Microsystems",
@@ -188,7 +201,8 @@ public static class InstallerCatalogService
                 DetectionNames: new[] { "SCR3", "SCR3310", "SCM Microsystems" },
                 InstallArguments: Array.Empty<string>(),
                 Sequence: 6,
-                RequiresManualConfirmation: true),
+                RequiresManualConfirmation: true,
+                ExpectedPublisherNames: new[] { "Identiv", "SCM Microsystems", "Certisign" }),
             new(
                 Id: "drv-java",
                 DisplayName: "Java Runtime (Desktop Oracle 64 bits)",
@@ -198,20 +212,8 @@ public static class InstallerCatalogService
                 RequiredVersion: "1.8",
                 DetectionNames: new[] { "Java", "Java Runtime", "Java SE Runtime" },
                 InstallArguments: Array.Empty<string>(),
-                AutomaticInstallerPath: "winget.exe",
-                AutomaticInstallerArguments: new[]
-                {
-                    "install",
-                    "--id", "Oracle.JavaRuntimeEnvironment",
-                    "--exact",
-                    "--source", "winget",
-                    "--accept-source-agreements",
-                    "--disable-interactivity",
-                    "--silent",
-                    "--accept-package-agreements",
-                    "--force"
-                },
-                Sequence: 7)
+                Sequence: 7,
+                ExpectedPublisherNames: new[] { "Oracle" })
         };
 
     public static IReadOnlyList<Uri> GetJavaManualUris() => JavaManualPageUris;
