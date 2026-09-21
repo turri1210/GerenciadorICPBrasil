@@ -11,6 +11,7 @@
     <Product>Gerenciador ICP Brasil</Product>
     <AssemblyTitle>Gerenciador ICP Brasil — Configuração elevada</AssemblyTitle>
     <Description>Executor administrativo integrado ao Gerenciador ICP Brasil.</Description>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
 
 

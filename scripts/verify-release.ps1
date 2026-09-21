@@ -41,11 +41,28 @@ $requiredWinUiResources = @(
     Join-Path $resolvedArtifactDirectory 'Views\MainPage.xbf'
 )
 
+$requiredSelfContainedFiles = @(
+    Join-Path $resolvedArtifactDirectory 'Microsoft.UI.Xaml.dll'
+    Join-Path $resolvedArtifactDirectory 'Microsoft.WindowsAppRuntime.dll'
+    Join-Path $resolvedArtifactDirectory 'coreclr.dll'
+    Join-Path $resolvedArtifactDirectory 'hostfxr.dll'
+    Join-Path $resolvedArtifactDirectory 'Helpers\ElevatedConfiguration\coreclr.dll'
+    Join-Path $resolvedArtifactDirectory 'Helpers\ElevatedConfiguration\hostfxr.dll'
+)
+
 foreach ($resource in $requiredWinUiResources)
 {
     if (-not (Test-Path -LiteralPath $resource -PathType Leaf))
     {
         throw "Recurso WinUI obrigatório não encontrado: $resource"
+    }
+}
+
+foreach ($dependency in $requiredSelfContainedFiles)
+{
+    if (-not (Test-Path -LiteralPath $dependency -PathType Leaf))
+    {
+        throw "Dependência self-contained obrigatória não encontrada: $dependency"
     }
 }
 

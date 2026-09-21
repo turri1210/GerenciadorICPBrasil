@@ -71,6 +71,7 @@ var certificateBridgeService = File.ReadAllText(Path.Combine(root, "Services", "
 var releaseScript = File.ReadAllText(Path.Combine(root, "scripts", "build-release.ps1"));
 var releaseVerifier = File.ReadAllText(Path.Combine(root, "scripts", "verify-release.ps1"));
 var mainProject = File.ReadAllText(Path.Combine(root, "GerenciadorIcpBrasil.csproj"));
+var elevatedProject = File.ReadAllText(Path.Combine(root, "Helpers", "ElevatedConfiguration", "ConfigAuditoria.csproj"));
 var installerScript = File.ReadAllText(Path.Combine(root, "installer", "GerenciadorICPBrasil.iss"));
 var signPathApplication = File.ReadAllText(Path.Combine(root, ".signpath", "artifact-configurations", "application-v1.xml"));
 var signPathInstaller = File.ReadAllText(Path.Combine(root, ".signpath", "artifact-configurations", "installer-v1.xml"));
@@ -114,6 +115,11 @@ Check(failures, !File.ReadAllText(Path.Combine(root, "Helpers", "CertificateSele
 Check(failures, releaseScript.Contains("Helpers\\ElevatedConfiguration", StringComparison.Ordinal), "O build unificado não publica o executor administrativo.");
 Check(failures, releaseScript.Contains("Helpers\\CertificateSelector", StringComparison.Ordinal), "O build unificado não publica o seletor de certificados.");
 Check(failures, mainProject.Contains("CopyWinUiResourcesToPublish", StringComparison.Ordinal), "O projeto não publica os recursos WinUI compilados.");
+Check(failures, mainProject.Contains("<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>", StringComparison.Ordinal), "O Windows App SDK não está configurado como self-contained.");
+Check(failures, elevatedProject.Contains("<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>", StringComparison.Ordinal), "O helper administrativo não restaura as dependências do runtime win-x64.");
+Check(failures, releaseScript.Contains("GerenciadorIcpBrasil.csproj", StringComparison.Ordinal) && releaseScript.Contains("--self-contained true", StringComparison.Ordinal), "O aplicativo principal não é publicado como self-contained.");
+Check(failures, releaseScript.Contains("ConfigAuditoria.csproj", StringComparison.Ordinal) && releaseScript.Contains("--self-contained true", StringComparison.Ordinal), "O helper administrativo não é publicado como self-contained.");
+Check(failures, releaseVerifier.Contains("requiredSelfContainedFiles", StringComparison.Ordinal), "A validação da release não exige as dependências self-contained.");
 Check(failures, releaseVerifier.Contains("GerenciadorIcpBrasil.pri", StringComparison.Ordinal), "A validação não exige o índice de recursos WinUI.");
 Check(failures, releaseVerifier.Contains("Views\\MainPage.xbf", StringComparison.Ordinal), "A validação não exige o XAML compilado da tela principal.");
 Check(failures, installerScript.Contains("AppPublisher=Rede ICP Brasil", StringComparison.Ordinal), "O instalador não informa o editor Rede ICP Brasil.");
@@ -121,11 +127,10 @@ Check(failures, !signPathApplication.Contains("Assistente ICP", StringComparison
 Check(failures, !signPathInstaller.Contains("Assistente ICP", StringComparison.OrdinalIgnoreCase), "A configuração SignPath do instalador ainda usa o nome antigo.");
 Check(failures, !launchSettings.Contains("MsixPackage", StringComparison.OrdinalIgnoreCase), "O perfil de execução ainda oferece empacotamento MSIX.");
 Check(failures, !landingPage.Contains("Microsoft Store", StringComparison.OrdinalIgnoreCase), "A página pública ainda menciona a Microsoft Store.");
-Check(failures, installerScript.Contains("Get-AuthenticodeSignature", StringComparison.Ordinal), "O instalador não valida a assinatura dos pré-requisitos baixados.");
-Check(failures, installerScript.Contains("Result := EnsurePrerequisitesInstalled(NeedsRestart);", StringComparison.Ordinal), "O instalador não executa a verificação dos pré-requisitos.");
-Check(failures, installerScript.Contains("EnsureProtectedWorkDirectory", StringComparison.Ordinal) && !installerScript.Contains("{tmp}\\gerenciador_prereq", StringComparison.OrdinalIgnoreCase), "Os scripts privilegiados do instalador ainda usam uma pasta temporária gravável pelo usuário.");
-Check(failures, installerScript.Contains("[System.IO.FileShare]::Read", StringComparison.Ordinal), "O instalador não bloqueia a troca dos pré-requisitos após validar a assinatura.");
-Check(failures, installerScript.Contains("GetDateTimeString('yyyymmddhhnnsszzz', '-', ':')", StringComparison.Ordinal), "A criação da pasta protegida usa separadores incompatíveis com o tipo Char do Inno Setup.");
+Check(failures, !installerScript.Contains("PrepareToInstall", StringComparison.Ordinal), "O instalador ainda executa a instalação de complementos.");
+Check(failures, !installerScript.Contains("WebView2BootstrapperUrl", StringComparison.Ordinal), "O instalador ainda baixa o WebView2 Runtime.");
+Check(failures, !installerScript.Contains("WindowsAppRuntimeInstallerUrl", StringComparison.Ordinal), "O instalador ainda baixa o Windows App Runtime.");
+Check(failures, !installerScript.Contains("DotNetDesktopRuntimeInstallerUrl", StringComparison.Ordinal), "O instalador ainda baixa o .NET Desktop Runtime.");
 Check(failures, installerManager.Contains("AuthenticodeVerifier.VerifyTrustedSignature", StringComparison.Ordinal), "O gerenciador executa instaladores sem validar a assinatura Authenticode.");
 Check(failures, installerManager.Contains("FileShare.Read", StringComparison.Ordinal), "O gerenciador não bloqueia a troca do instalador entre validação e execução.");
 Check(failures, installerCatalog.Contains("ExpectedPublisherNames", StringComparison.Ordinal), "O catálogo não vincula os instaladores aos editores esperados.");

@@ -6,13 +6,13 @@ Aplicativo Windows de código aberto para preparar, verificar e configurar esta�
 
 Este repositório contém somente código-fonte e recursos redistribuíveis. Binários gerados, certificados, drivers, SDKs e instaladores proprietários não são versionados.
 
-O produto usa .NET 8 e Windows App SDK. Todas as funcionalidades pertencem à mesma versão e são distribuídas pelo mesmo instalador EXE, produzido com Inno Setup.
+O produto usa .NET 8 e Windows App SDK. Todas as funcionalidades pertencem à mesma versão e são distribuídas pelo mesmo instalador EXE, produzido com Inno Setup. A distribuição é self-contained: o .NET e o Windows App SDK necessários acompanham o programa e não são instalados separadamente no computador.
 
 O código da interface e das funcionalidades está em `Features/`. Executáveis auxiliares próprios, usados para isolamento técnico ou elevação administrativa, estão em `Helpers/` e são compilados, atualizados e assinados junto com o Gerenciador. Não existe atualização independente de módulos.
 
 ## Compilação
 
-Pré-requisitos para o aplicativo principal:
+Pré-requisitos para compilar o aplicativo:
 
 - Windows 10 versão 1809 ou posterior;
 - SDK .NET 8.0.425;

@@ -25,7 +25,21 @@ if (Test-Path -LiteralPath $resolvedOutputPath)
 }
 
 dotnet restore (Join-Path $repositoryRoot 'GerenciadorICPBrasil.sln') --locked-mode
+if ($LASTEXITCODE -ne 0) { throw 'Falha ao restaurar as dependências da solução.' }
+
 dotnet publish (Join-Path $repositoryRoot 'GerenciadorIcpBrasil.csproj') `
+    -c Release `
+    -r $Runtime `
+    --self-contained true `
+    --no-restore `
+    -p:WindowsAppSDKSelfContained=true `
+    -p:Version=$Version `
+    -p:AssemblyVersion="$Version.0" `
+    -p:FileVersion="$Version.0" `
+    -p:PublishDir="$outputPath\"
+if ($LASTEXITCODE -ne 0) { throw 'Falha ao publicar o aplicativo principal.' }
+
+dotnet publish (Join-Path $repositoryRoot 'Helpers\ElevatedConfiguration\ConfigAuditoria.csproj') `
     -c Release `
     -r $Runtime `
     --self-contained true `
@@ -33,15 +47,8 @@ dotnet publish (Join-Path $repositoryRoot 'GerenciadorIcpBrasil.csproj') `
     -p:Version=$Version `
     -p:AssemblyVersion="$Version.0" `
     -p:FileVersion="$Version.0" `
-    -p:PublishDir="$outputPath\"
-
-dotnet publish (Join-Path $repositoryRoot 'Helpers\ElevatedConfiguration\ConfigAuditoria.csproj') `
-    -c Release `
-    --no-restore `
-    -p:Version=$Version `
-    -p:AssemblyVersion="$Version.0" `
-    -p:FileVersion="$Version.0" `
     -p:PublishDir="$outputPath\Helpers\ElevatedConfiguration\"
+if ($LASTEXITCODE -ne 0) { throw 'Falha ao publicar o executor administrativo.' }
 
 dotnet publish (Join-Path $repositoryRoot 'Helpers\CertificateSelector\CertSelector.csproj') `
     -c Release `
@@ -52,6 +59,7 @@ dotnet publish (Join-Path $repositoryRoot 'Helpers\CertificateSelector\CertSelec
     -p:AssemblyVersion="$Version.0" `
     -p:FileVersion="$Version.0" `
     -p:PublishDir="$outputPath\Helpers\CertificateSelector\"
+if ($LASTEXITCODE -ne 0) { throw 'Falha ao publicar o seletor de certificados.' }
 
 $manifestPath = Join-Path $outputPath 'app-version.json'
 $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
