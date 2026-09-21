@@ -69,6 +69,8 @@ var updateService = File.ReadAllText(Path.Combine(root, "Services", "AppUpdateSe
 var moduleCatalogService = File.ReadAllText(Path.Combine(root, "Services", "ModuleCatalogService.cs"));
 var certificateBridgeService = File.ReadAllText(Path.Combine(root, "Services", "CertificateBridgeService.cs"));
 var releaseScript = File.ReadAllText(Path.Combine(root, "scripts", "build-release.ps1"));
+var releaseVerifier = File.ReadAllText(Path.Combine(root, "scripts", "verify-release.ps1"));
+var mainProject = File.ReadAllText(Path.Combine(root, "GerenciadorIcpBrasil.csproj"));
 
 Check(failures, mainManifest.Contains("requestedExecutionLevel level=\"asInvoker\"", StringComparison.Ordinal), "O app principal não está marcado como asInvoker.");
 Check(failures, helperManifest.Contains("requestedExecutionLevel level=\"requireAdministrator\"", StringComparison.Ordinal), "O helper não está marcado como requireAdministrator.");
@@ -97,6 +99,9 @@ Check(failures, certificateBridgeService.Contains("http://127.0.0.1", StringComp
 Check(failures, certificateBridgeService.Contains("IsAllowedOrigin", StringComparison.Ordinal), "A ponte de certificados não valida a origem do navegador.");
 Check(failures, releaseScript.Contains("Helpers\\ElevatedConfiguration", StringComparison.Ordinal), "O build unificado não publica o executor administrativo.");
 Check(failures, releaseScript.Contains("Helpers\\CertificateSelector", StringComparison.Ordinal), "O build unificado não publica o seletor de certificados.");
+Check(failures, mainProject.Contains("CopyWinUiResourcesToPublish", StringComparison.Ordinal), "O projeto não publica os recursos WinUI compilados.");
+Check(failures, releaseVerifier.Contains("GerenciadorIcpBrasil.pri", StringComparison.Ordinal), "A validação não exige o índice de recursos WinUI.");
+Check(failures, releaseVerifier.Contains("Views\\MainPage.xbf", StringComparison.Ordinal), "A validação não exige o XAML compilado da tela principal.");
 
 if (failures.Count > 0)
 {

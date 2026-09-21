@@ -101,4 +101,24 @@
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
+
+    <!-- Recursos compilados exigidos por aplicativos WinUI 3 não empacotados. -->
+    <Target Name="CopyWinUiResourcesToPublish"
+            AfterTargets="Publish"
+            Condition="'$(WindowsPackageType)' == 'None'">
+        <Error Condition="!Exists('$(TargetDir)$(AssemblyName).pri')"
+               Text="Recurso WinUI obrigatório ausente: $(TargetDir)$(AssemblyName).pri" />
+        <Error Condition="!Exists('$(TargetDir)App.xbf')"
+               Text="Recurso WinUI obrigatório ausente: $(TargetDir)App.xbf" />
+        <Error Condition="!Exists('$(TargetDir)Views\MainPage.xbf')"
+               Text="Recurso WinUI obrigatório ausente: $(TargetDir)Views\MainPage.xbf" />
+
+        <MakeDir Directories="$(PublishDir)Views" />
+        <Copy SourceFiles="$(TargetDir)$(AssemblyName).pri"
+              DestinationFiles="$(PublishDir)$(AssemblyName).pri" />
+        <Copy SourceFiles="$(TargetDir)App.xbf"
+              DestinationFiles="$(PublishDir)App.xbf" />
+        <Copy SourceFiles="$(TargetDir)Views\MainPage.xbf"
+              DestinationFiles="$(PublishDir)Views\MainPage.xbf" />
+    </Target>
 </Project>

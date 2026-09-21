@@ -35,6 +35,20 @@ $ownedBinaries = @(
     Join-Path $resolvedArtifactDirectory 'Helpers\CertificateSelector\CertSelector.exe'
 )
 
+$requiredWinUiResources = @(
+    Join-Path $resolvedArtifactDirectory 'GerenciadorIcpBrasil.pri'
+    Join-Path $resolvedArtifactDirectory 'App.xbf'
+    Join-Path $resolvedArtifactDirectory 'Views\MainPage.xbf'
+)
+
+foreach ($resource in $requiredWinUiResources)
+{
+    if (-not (Test-Path -LiteralPath $resource -PathType Leaf))
+    {
+        throw "Recurso WinUI obrigatório não encontrado: $resource"
+    }
+}
+
 foreach ($binary in $ownedBinaries)
 {
     if (-not (Test-Path -LiteralPath $binary))
