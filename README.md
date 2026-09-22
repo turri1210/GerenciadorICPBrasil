@@ -64,11 +64,13 @@ Somente binários produzidos integralmente pelo código deste repositório e pel
 
 Cada release exige revisão e aprovação humana antes da assinatura. O fluxo usa runners hospedados pelo GitHub e verificação de origem do artefato.
 
-Papéis do projeto, a serem preenchidos com os perfis públicos antes da candidatura:
+Papéis do projeto:
 
-- Authors/Committers: mantenedores autorizados da Rede ICP Brasil;
-- Reviewers: revisores independentes designados;
-- Approvers: responsáveis pela aprovação manual das solicitações de assinatura.
+- Authors/Committers: [@turri1210](https://github.com/turri1210);
+- Reviewers: [@turri1210](https://github.com/turri1210);
+- Approvers: [@turri1210](https://github.com/turri1210).
+
+Política de privacidade: [PRIVACY.md](PRIVACY.md). O programa não transfere informações para outros sistemas em rede, exceto quando essa ação é solicitada especificamente pela pessoa que instala ou opera o aplicativo.
 
 ## Licença e marcas
 
