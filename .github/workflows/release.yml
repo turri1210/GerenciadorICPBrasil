@@ -1,16 +1,14 @@
-name: Release assinada
+name: Release
 
 on:
   push:
     tags: ['v*']
 
 permissions:
-  actions: read
   contents: write
 
 jobs:
-  sign-and-release:
-    if: vars.SIGNPATH_ENABLED == 'true'
+  build-and-release:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -29,46 +27,71 @@ jobs:
           cache: true
           cache-dependency-path: '**/packages.lock.json'
 
-      - name: Testar
+      - name: Restaurar e testar
         shell: pwsh
         run: |
           dotnet restore GerenciadorICPBrasil.sln --locked-mode
           dotnet run --project tests/SecurityPolicyChecks/SecurityPolicyChecks.csproj -c Release
 
-      - name: Gerar aplicativo não assinado
+      - name: Gerar aplicativo
         shell: pwsh
         run: ./scripts/build-release.ps1 -Version '${{ steps.version.outputs.value }}'
 
-      - name: Validar metadados
+      - name: Validar aplicativo
         shell: pwsh
         run: ./scripts/verify-release.ps1 -Version '${{ steps.version.outputs.value }}' -ArtifactDirectory artifacts/app-unsigned
 
-      - name: Enviar aplicativo para verificação de origem
-        id: upload-app
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: app-unsigned
-          path: artifacts/app-unsigned/**
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Solicitar assinatura do aplicativo
-        uses: signpath/github-action-submit-signing-request@f6d04783b4569d051e0c80105fe66e82819d0092 # v3
-        with:
-          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
-          organization-id: '${{ vars.SIGNPATH_ORGANIZATION_ID }}'
-          project-slug: '${{ vars.SIGNPATH_PROJECT_SLUG }}'
-          signing-policy-slug: '${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}'
-          artifact-configuration-slug: '${{ vars.SIGNPATH_APP_ARTIFACT_CONFIG_SLUG }}'
-          github-artifact-id: '${{ steps.upload-app.outputs.artifact-id }}'
-          wait-for-completion: true
-          output-artifact-directory: artifacts/app-signed
-          parameters: |
-            version: ${{ steps.version.outputs.value }}
-
-      - name: Validar aplicativo assinado
+      - name: Importar certificado de assinatura
         shell: pwsh
-        run: ./scripts/verify-release.ps1 -Version '${{ steps.version.outputs.value }}' -ArtifactDirectory artifacts/app-signed -RequireSignature
+        env:
+          CODE_SIGN_PFX_BASE64: '${{ secrets.CODE_SIGN_PFX_BASE64 }}'
+          CODE_SIGN_PFX_PASSWORD: '${{ secrets.CODE_SIGN_PFX_PASSWORD }}'
+        run: |
+          if (-not $env:CODE_SIGN_PFX_BASE64 -or -not $env:CODE_SIGN_PFX_PASSWORD) {
+            throw 'Configure CODE_SIGN_PFX_BASE64 e CODE_SIGN_PFX_PASSWORD como segredos do repositório.'
+          }
+          $pfxPath = Join-Path $env:RUNNER_TEMP 'code-signing.pfx'
+          try {
+            [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:CODE_SIGN_PFX_BASE64))
+            $password = ConvertTo-SecureString $env:CODE_SIGN_PFX_PASSWORD -AsPlainText -Force
+            $certificates = @(Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My -Password $password)
+            $thumbprint = '038406E8CB7700739D12CD73A911DF5E90DED643'
+            $certificate = $certificates | Where-Object Thumbprint -eq $thumbprint | Select-Object -First 1
+            if (-not $certificate -or -not $certificate.HasPrivateKey) {
+              throw 'O PFX não corresponde ao certificado Rede ICP Brasil autorizado.'
+            }
+            "CODE_SIGN_THUMBPRINT=$thumbprint" >> $env:GITHUB_ENV
+          }
+          finally {
+            Remove-Item -LiteralPath $pfxPath -Force -ErrorAction SilentlyContinue
+          }
+
+      - name: Assinar aplicativo e auxiliares
+        shell: pwsh
+        run: |
+          $signTool = Get-ChildItem (Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\bin') -Recurse -Filter signtool.exe |
+            Where-Object { $_.FullName -match '\\x64\\signtool\.exe$' } |
+            Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $signTool) { throw 'SignTool x64 não encontrado.' }
+          "SIGNTOOL_PATH=$signTool" >> $env:GITHUB_ENV
+          Copy-Item -LiteralPath artifacts/app-unsigned -Destination artifacts/app-signed -Recurse
+          $files = @(
+            'GerenciadorIcpBrasil.exe',
+            'GerenciadorIcpBrasil.dll',
+            'Helpers\ElevatedConfiguration\ConfigAuditoria.exe',
+            'Helpers\ElevatedConfiguration\ConfigAuditoria.dll',
+            'Helpers\CertificateSelector\CertSelector.exe'
+          )
+          foreach ($file in $files) {
+            $path = Join-Path (Resolve-Path artifacts/app-signed).Path $file
+            & $signTool sign /sha1 $env:CODE_SIGN_THUMBPRINT /s My /fd SHA256 /d 'Gerenciador ICP Brasil' $path
+            if ($LASTEXITCODE -ne 0) { throw "Falha ao assinar $file" }
+            $signature = Get-AuthenticodeSignature -LiteralPath $path
+            if ($signature.SignerCertificate.Thumbprint -ne $env:CODE_SIGN_THUMBPRINT -or
+                $signature.Status -notin @('Valid', 'NotTrusted')) {
+              throw "Assinatura inválida em $file"
+            }
+          }
 
       - name: Instalar Inno Setup fixado
         shell: pwsh
@@ -84,38 +107,29 @@ jobs:
           & $iscc "/DAppVersion=${{ steps.version.outputs.value }}" "/DSourceDir=$source" "/DOutputDir=$output" installer/GerenciadorICPBrasil.iss
           if ($LASTEXITCODE -ne 0) { throw 'Falha ao compilar o instalador.' }
 
-      - name: Enviar instalador para verificação de origem
-        id: upload-installer
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: installer-unsigned
-          path: artifacts/installer-unsigned/*.exe
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Solicitar assinatura do instalador
-        uses: signpath/github-action-submit-signing-request@f6d04783b4569d051e0c80105fe66e82819d0092 # v3
-        with:
-          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
-          organization-id: '${{ vars.SIGNPATH_ORGANIZATION_ID }}'
-          project-slug: '${{ vars.SIGNPATH_PROJECT_SLUG }}'
-          signing-policy-slug: '${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}'
-          artifact-configuration-slug: '${{ vars.SIGNPATH_INSTALLER_ARTIFACT_CONFIG_SLUG }}'
-          github-artifact-id: '${{ steps.upload-installer.outputs.artifact-id }}'
-          wait-for-completion: true
-          output-artifact-directory: artifacts/installer-signed
-          parameters: |
-            version: ${{ steps.version.outputs.value }}
-
       - name: Validar e publicar release
         shell: pwsh
         env:
           GH_TOKEN: '${{ github.token }}'
         run: |
-          $installer = Get-ChildItem artifacts/installer-signed -Recurse -File -Filter '*.exe' | Select-Object -First 1
-          if (-not $installer) { throw 'Instalador assinado não encontrado.' }
-          $signature = Get-AuthenticodeSignature -LiteralPath $installer.FullName
-          if ($signature.Status -ne 'Valid') { throw "Assinatura inválida: $($signature.Status)" }
-          $hash = (Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash
-          "$hash  $($installer.Name)" | Set-Content artifacts/SHA256SUMS.txt
-          gh release create '${{ github.ref_name }}' $installer.FullName artifacts/SHA256SUMS.txt --verify-tag --generate-notes
+          $version = '${{ steps.version.outputs.value }}'
+          $installer = Join-Path $PWD "artifacts\installer-unsigned\GerenciadorICPBrasilSetup-$version.exe"
+          if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) { throw 'Instalador não encontrado.' }
+          & $env:SIGNTOOL_PATH sign /sha1 $env:CODE_SIGN_THUMBPRINT /s My /fd SHA256 /d 'Gerenciador ICP Brasil' $installer
+          if ($LASTEXITCODE -ne 0) { throw 'Falha ao assinar o instalador.' }
+          $signature = Get-AuthenticodeSignature -LiteralPath $installer
+          if ($signature.SignerCertificate.Thumbprint -ne $env:CODE_SIGN_THUMBPRINT -or
+              $signature.Status -notin @('Valid', 'NotTrusted')) {
+            throw 'Assinatura do instalador inválida.'
+          }
+          $hash = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash
+          "$hash  $(Split-Path $installer -Leaf)" | Set-Content artifacts/SHA256SUMS.txt
+          gh release create '${{ github.ref_name }}' $installer artifacts/SHA256SUMS.txt --verify-tag --generate-notes
+
+      - name: Remover certificado do runner
+        if: always()
+        shell: pwsh
+        run: |
+          if ($env:CODE_SIGN_THUMBPRINT) {
+            Remove-Item -LiteralPath "Cert:\CurrentUser\My\$env:CODE_SIGN_THUMBPRINT" -Force -ErrorAction SilentlyContinue
+          }

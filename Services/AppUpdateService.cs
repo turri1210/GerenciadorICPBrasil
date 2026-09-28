@@ -8,94 +8,122 @@ namespace GerenciadorIcpBrasil.Services;
 
 public sealed class AppUpdateService
 {
-    private static readonly Uri OfficialReleaseBaseUri = new("https://sistema.redeicpbrasil.com.br/gerenciador/");
-
+    private const string Repository = "turri1210/GerenciadorICPBrasil";
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         PropertyNameCaseInsensitive = true,
     };
 
-    private readonly string _manifestUrl;
-    private readonly string _cachePath;
-    private readonly string _fallbackPath;
-
-    public AppUpdateService(string baseDirectory, string appDataRoot)
-    {
-        var manifestFileName = UpdateChannel.GetFileName("app-version.json");
-        _manifestUrl = UpdateChannel.GetGerenciadorUrl("app-version.json");
-        _cachePath = Path.Combine(appDataRoot, BuildCacheFileName(manifestFileName));
-        _fallbackPath = Path.Combine(baseDirectory, manifestFileName);
-    }
-
     public string CurrentVersion => typeof(App).Assembly.GetName().Version?.ToString() ?? "0.0.0";
 
     public async Task<AppUpdateCheckResult> CheckForUpdateAsync()
     {
-        string? json = null;
-        var source = "indisponivel";
-
         try
         {
-            using var http = new HttpClient
+            using var http = CreateGitHubClient(TimeSpan.FromSeconds(15));
+            var endpoint = UpdateChannel.IsBetaMode
+                ? $"https://api.github.com/repos/{Repository}/releases?per_page=20"
+                : $"https://api.github.com/repos/{Repository}/releases/latest";
+            using var response = await http.GetAsync(endpoint).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
             {
-                Timeout = TimeSpan.FromSeconds(10),
-            };
-            json = await http.GetStringAsync(_manifestUrl).ConfigureAwait(false);
-            if (!string.IsNullOrWhiteSpace(json))
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(_cachePath)!);
-                await File.WriteAllTextAsync(_cachePath, json).ConfigureAwait(false);
-                source = "online";
+                return AppUpdateCheckResult.NotAvailable(CurrentVersion, "GitHub",
+                    $"Não foi possível consultar as releases no GitHub (HTTP {(int)response.StatusCode}). Verifique se o repositório está público.");
             }
-        }
-        catch
-        {
-            // fallback
-        }
 
-        if (string.IsNullOrWhiteSpace(json) && File.Exists(_cachePath))
-        {
-            json = await File.ReadAllTextAsync(_cachePath).ConfigureAwait(false);
-            source = "cache";
-        }
+            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            GitHubRelease? release;
+            if (UpdateChannel.IsBetaMode)
+            {
+                release = JsonSerializer.Deserialize<List<GitHubRelease>>(json, SerializerOptions)?
+                    .Where(item => !item.Draft)
+                    .OrderByDescending(item => item.PublishedAt)
+                    .FirstOrDefault();
+            }
+            else
+            {
+                release = JsonSerializer.Deserialize<GitHubRelease>(json, SerializerOptions);
+            }
 
-        if (string.IsNullOrWhiteSpace(json) && File.Exists(_fallbackPath))
-        {
-            json = await File.ReadAllTextAsync(_fallbackPath).ConfigureAwait(false);
-            source = "local";
-        }
+            if (release == null || release.Draft || !TryGetReleaseVersion(release.TagName, out var version))
+            {
+                return AppUpdateCheckResult.NotAvailable(CurrentVersion, "GitHub", "Release válida não encontrada no GitHub.");
+            }
 
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return AppUpdateCheckResult.NotAvailable(CurrentVersion, source);
-        }
+            var installerName = $"GerenciadorICPBrasilSetup-{version}.exe";
+            var asset = release.Assets?.SingleOrDefault(item =>
+                string.Equals(item.Name, installerName, StringComparison.OrdinalIgnoreCase));
+            if (asset == null || !TryGetSha256(asset.Digest, out var sha256) ||
+                !IsOfficialAssetApiUrl(asset.Url))
+            {
+                return AppUpdateCheckResult.NotAvailable(CurrentVersion, "GitHub",
+                    "A release não contém o instalador oficial com digest SHA-256 válido.");
+            }
 
-        AppUpdateManifest? manifest;
-        try
-        {
-            manifest = JsonSerializer.Deserialize<AppUpdateManifest>(json, SerializerOptions);
-        }
-        catch
-        {
-            return AppUpdateCheckResult.NotAvailable(CurrentVersion, source);
-        }
-
-        if (manifest == null || string.IsNullOrWhiteSpace(manifest.Version))
-        {
-            return AppUpdateCheckResult.NotAvailable(CurrentVersion, source);
-        }
-
-        var hasUpdate = CompareVersions(manifest.Version, CurrentVersion) > 0;
-        return new AppUpdateCheckResult(
-            hasUpdate,
-            CurrentVersion,
-            manifest.Version,
-            manifest.InstallerUrl ?? manifest.Url ?? string.Empty,
-            manifest.Sha256 ?? string.Empty,
-            manifest.Notes ?? string.Empty,
-            manifest.PublishedAt ?? string.Empty,
-            source,
+            var hasUpdate = CompareVersions(version, CurrentVersion) > 0;
+            return new AppUpdateCheckResult(hasUpdate, CurrentVersion, version, asset.Url!, sha256,
+                release.Body ?? string.Empty, release.PublishedAt ?? string.Empty, "GitHub",
                 hasUpdate ? null : "O aplicativo já está atualizado.");
+        }
+        catch (Exception ex)
+        {
+            return AppUpdateCheckResult.NotAvailable(CurrentVersion, "GitHub",
+                $"Não foi possível consultar o GitHub: {ex.Message}");
+        }
+    }
+
+    private static HttpClient CreateGitHubClient(TimeSpan timeout)
+    {
+        var http = new HttpClient { Timeout = timeout };
+        http.DefaultRequestHeaders.UserAgent.ParseAdd("GerenciadorICPBrasil-Updater");
+        http.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+        return http;
+    }
+
+    private static bool TryGetReleaseVersion(string? tag, out string version)
+    {
+        version = string.Empty;
+        if (string.IsNullOrWhiteSpace(tag) || tag[0] != 'v' ||
+            !Version.TryParse(tag[1..], out var parsed) || parsed.Build < 0 || parsed.Revision >= 0)
+        {
+            return false;
+        }
+        version = tag[1..];
+        return true;
+    }
+
+    private static bool TryGetSha256(string? digest, out string sha256)
+    {
+        sha256 = string.Empty;
+        if (digest == null || !digest.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase)) return false;
+        var value = digest[7..];
+        if (value.Length != 64 || value.Any(character => !Uri.IsHexDigit(character))) return false;
+        sha256 = value;
+        return true;
+    }
+
+    private static bool IsOfficialAssetApiUrl(string? value)
+        => Uri.TryCreate(value, UriKind.Absolute, out var uri) &&
+           uri.Scheme == Uri.UriSchemeHttps && uri.Host == "api.github.com" && uri.Port == 443 &&
+           uri.AbsolutePath.StartsWith($"/repos/{Repository}/releases/assets/", StringComparison.Ordinal) &&
+           long.TryParse(uri.Segments.LastOrDefault(), out _) &&
+           string.IsNullOrEmpty(uri.Query) && string.IsNullOrEmpty(uri.Fragment) &&
+           string.IsNullOrEmpty(uri.UserInfo);
+
+    private sealed class GitHubRelease
+    {
+        [JsonPropertyName("tag_name")] public string? TagName { get; set; }
+        [JsonPropertyName("draft")] public bool Draft { get; set; }
+        [JsonPropertyName("body")] public string? Body { get; set; }
+        [JsonPropertyName("published_at")] public string? PublishedAt { get; set; }
+        [JsonPropertyName("assets")] public List<GitHubAsset>? Assets { get; set; }
+    }
+
+    private sealed class GitHubAsset
+    {
+        [JsonPropertyName("name")] public string? Name { get; set; }
+        [JsonPropertyName("url")] public string? Url { get; set; }
+        [JsonPropertyName("digest")] public string? Digest { get; set; }
     }
 
     public async Task<AppUpdateApplyResult> StartUpdateAsync(AppUpdateCheckResult update)
@@ -118,11 +146,20 @@ public sealed class AppUpdateService
 
         try
         {
-            using (var http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) })
+            using (var http = CreateGitHubClient(TimeSpan.FromMinutes(10)))
             {
+                http.DefaultRequestHeaders.Accept.Clear();
+                http.DefaultRequestHeaders.Accept.ParseAdd("application/octet-stream");
                 using var response = await http.GetAsync(update.DownloadUrl, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
-                ValidateDownloadUri(response.RequestMessage?.RequestUri?.AbsoluteUri);
+                var finalUri = response.RequestMessage?.RequestUri;
+                if (finalUri?.Scheme != Uri.UriSchemeHttps ||
+                    !(finalUri.Host.Equals("api.github.com", StringComparison.OrdinalIgnoreCase) ||
+                      finalUri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase) ||
+                      finalUri.Host.EndsWith(".githubusercontent.com", StringComparison.OrdinalIgnoreCase)))
+                {
+                    throw new InvalidOperationException("O download saiu dos endereços HTTPS do GitHub.");
+                }
 
                 await using var networkStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 await using var fileStream = new FileStream(installerPath, FileMode.Create, FileAccess.Write, FileShare.None);
@@ -132,11 +169,12 @@ public sealed class AppUpdateService
             using var executionLock = new FileStream(installerPath, FileMode.Open, FileAccess.Read, FileShare.Read);
             if (IsZipArchive(installerPath))
             {
-                return AppUpdateApplyResult.Fail("A URL da atualização aponta para um ZIP. Configure o app-version.json com o instalador (.exe).");
+                return AppUpdateApplyResult.Fail("A release aponta para um ZIP em vez do instalador (.exe).");
             }
 
             await ValidateHashAsync(installerPath, update.Sha256).ConfigureAwait(false);
             AuthenticodeVerifier.VerifyOfficialRelease(installerPath);
+            VerifyInstallerProduct(installerPath, update.LatestVersion);
 
             var started = Process.Start(new ProcessStartInfo
             {
@@ -187,15 +225,22 @@ public sealed class AppUpdateService
 
     private static void ValidateDownloadUri(string? value)
     {
-        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) ||
-            uri.Scheme != Uri.UriSchemeHttps ||
-            !uri.Host.Equals(OfficialReleaseBaseUri.Host, StringComparison.OrdinalIgnoreCase) ||
-            uri.Port != 443 ||
-            !uri.AbsolutePath.StartsWith(OfficialReleaseBaseUri.AbsolutePath, StringComparison.Ordinal) ||
-            !uri.AbsolutePath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ||
-            !string.IsNullOrEmpty(uri.UserInfo))
+        if (!IsOfficialAssetApiUrl(value))
         {
-            throw new InvalidOperationException("A atualização deve usar o endereço HTTPS oficial do Gerenciador ICP Brasil.");
+            throw new InvalidOperationException("O instalador não pertence à release oficial no GitHub.");
+        }
+    }
+
+    private static void VerifyInstallerProduct(string filePath, string expectedVersion)
+    {
+        var versionInfo = FileVersionInfo.GetVersionInfo(filePath);
+        if (!string.Equals(versionInfo.ProductName?.Trim(), "Gerenciador ICP Brasil", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("O instalador não pertence ao Gerenciador ICP Brasil.");
+        }
+        if (!string.Equals(versionInfo.ProductVersion?.Trim(), expectedVersion, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("A versão do instalador não corresponde à release.");
         }
     }
 
@@ -248,33 +293,6 @@ public sealed class AppUpdateService
         return int.TryParse(raw, out var number) ? number : 0;
     }
 
-    private static string BuildCacheFileName(string fileName)
-    {
-        var extension = Path.GetExtension(fileName);
-        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-        return $"{fileNameWithoutExtension}-cache{extension}";
-    }
-
-    private sealed class AppUpdateManifest
-    {
-        [JsonPropertyName("version")]
-        public string? Version { get; set; }
-
-        [JsonPropertyName("installerUrl")]
-        public string? InstallerUrl { get; set; }
-
-        [JsonPropertyName("url")]
-        public string? Url { get; set; }
-
-        [JsonPropertyName("sha256")]
-        public string? Sha256 { get; set; }
-
-        [JsonPropertyName("publishedAt")]
-        public string? PublishedAt { get; set; }
-
-        [JsonPropertyName("notes")]
-        public string? Notes { get; set; }
-    }
 }
 
 public sealed record AppUpdateCheckResult(
@@ -289,7 +307,7 @@ public sealed record AppUpdateCheckResult(
     string? Message)
 {
     public static AppUpdateCheckResult NotAvailable(string currentVersion, string source, string? message = null)
-        => new(false, currentVersion, currentVersion, string.Empty, string.Empty, string.Empty, string.Empty, source, message ?? "Manifesto de atualização indisponível.");
+        => new(false, currentVersion, currentVersion, string.Empty, string.Empty, string.Empty, string.Empty, source, message ?? "Release indisponível.");
 }
 
 public sealed record AppUpdateApplyResult(bool Success, string Message)
