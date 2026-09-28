@@ -42,6 +42,7 @@ jobs:
         run: ./scripts/verify-release.ps1 -Version '${{ steps.version.outputs.value }}' -ArtifactDirectory artifacts/app-unsigned
 
       - name: Importar certificado de assinatura
+        timeout-minutes: 3
         shell: pwsh
         env:
           CODE_SIGN_PFX_BASE64: '${{ secrets.CODE_SIGN_PFX_BASE64 }}'
@@ -65,9 +66,19 @@ jobs:
             }
             $publicCertificatePath = Join-Path $env:RUNNER_TEMP 'code-signing.cer'
             Export-Certificate -Cert $certificate -FilePath $publicCertificatePath | Out-Null
-            $trustedCertificate = Import-Certificate -FilePath $publicCertificatePath -CertStoreLocation Cert:\CurrentUser\Root
-            if ($trustedCertificate.Thumbprint -ne $thumbprint) {
-              throw 'Falha ao confiar no certificado público de assinatura.'
+            $publicCertificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($publicCertificatePath)
+            $rootStore = [System.Security.Cryptography.X509Certificates.X509Store]::new(
+              [System.Security.Cryptography.X509Certificates.StoreName]::Root,
+              [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser)
+            try {
+              $rootStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
+              $rootStore.Add($publicCertificate)
+              if (-not ($rootStore.Certificates | Where-Object Thumbprint -eq $thumbprint)) {
+                throw 'Falha ao confiar no certificado público de assinatura.'
+              }
+            }
+            finally {
+              $rootStore.Close()
             }
             "CODE_SIGN_THUMBPRINT=$thumbprint" >> $env:GITHUB_ENV
           }
@@ -152,5 +163,15 @@ jobs:
         run: |
           if ($env:CODE_SIGN_THUMBPRINT) {
             Remove-Item -LiteralPath "Cert:\CurrentUser\My\$env:CODE_SIGN_THUMBPRINT" -Force -ErrorAction SilentlyContinue
-            Remove-Item -LiteralPath "Cert:\CurrentUser\Root\$env:CODE_SIGN_THUMBPRINT" -Force -ErrorAction SilentlyContinue
+            $rootStore = [System.Security.Cryptography.X509Certificates.X509Store]::new(
+              [System.Security.Cryptography.X509Certificates.StoreName]::Root,
+              [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser)
+            try {
+              $rootStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
+              $trustedCertificate = $rootStore.Certificates | Where-Object Thumbprint -eq $env:CODE_SIGN_THUMBPRINT | Select-Object -First 1
+              if ($trustedCertificate) { $rootStore.Remove($trustedCertificate) }
+            }
+            finally {
+              $rootStore.Close()
+            }
           }
