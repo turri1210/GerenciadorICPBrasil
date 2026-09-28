@@ -101,10 +101,12 @@ Check(failures, elevatedRunner.Contains("EvaluateSecurityPoliciesAsync", StringC
 Check(failures, backupService.Contains("ProtectedData.Protect", StringComparison.Ordinal), "O backup biométrico local não utiliza a proteção do Windows.");
 Check(failures, !backupService.Contains("HttpClient", StringComparison.Ordinal), "O backup biométrico ainda contém envio pela rede.");
 Check(failures, !auditService.Contains("HttpClient", StringComparison.Ordinal), "A auditoria ainda contém envio pela rede.");
-Check(failures, updateService.Contains("AuthenticodeVerifier.VerifyOfficialRelease", StringComparison.Ordinal), "O atualizador não valida a assinatura do instalador.");
+Check(failures, updateService.Contains("https://api.github.com/repos/", StringComparison.Ordinal) && updateService.Contains("/releases/latest", StringComparison.Ordinal), "O atualizador não consulta a release no GitHub.");
 Check(failures, updateService.Contains("ValidateHashAsync", StringComparison.Ordinal), "O atualizador não valida o SHA-256 do instalador.");
 Check(failures, updateService.Contains("ValidateDownloadUri", StringComparison.Ordinal), "O atualizador não restringe o endereço do instalador.");
-Check(failures, File.ReadAllText(Path.Combine(root, "Services", "AuthenticodeVerifier.cs")).Contains("Gerenciador ICP Brasil", StringComparison.Ordinal), "A assinatura da atualização não é vinculada ao produto.");
+Check(failures, updateService.Contains("TryGetSha256(asset.Digest", StringComparison.Ordinal), "O atualizador não usa o digest da release.");
+Check(failures, updateService.Contains("AuthenticodeVerifier.VerifyOfficialRelease", StringComparison.Ordinal), "O atualizador não valida a assinatura do instalador.");
+Check(failures, updateService.Contains("VerifyInstallerProduct", StringComparison.Ordinal), "O atualizador não verifica o produto do instalador.");
 Check(failures, !File.Exists(Path.Combine(root, "modules.json")), "O catálogo remoto de módulos ainda existe.");
 Check(failures, !moduleCatalogService.Contains("HttpClient", StringComparison.Ordinal), "O catálogo de funcionalidades ainda acessa atualizações remotas.");
 Check(failures, !moduleCatalogService.Contains("packageUrl", StringComparison.OrdinalIgnoreCase), "O catálogo ainda contém pacotes independentes.");

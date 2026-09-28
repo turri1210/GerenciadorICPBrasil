@@ -32,7 +32,7 @@ public sealed partial class MainPage : Page
         var appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Gerenciador ICP Brasil");
         var appVersion = typeof(App).Assembly.GetName().Version?.ToString() ?? "0.0.0";
         _auditService = new AuditService(appVersion);
-        _appUpdateService = new AppUpdateService(baseDir, appData);
+        _appUpdateService = new AppUpdateService();
         NetworkChange.NetworkAvailabilityChanged += async (_, args) =>
         {
             if (args.IsAvailable)
@@ -244,6 +244,10 @@ public sealed partial class MainPage : Page
 
             if (!check.HasUpdate)
             {
+                if (!silentIfUpToDate)
+                {
+                    await ShowMessageAsync(check.Message ?? "Nenhuma atualização disponível.", "Atualização do aplicativo");
+                }
                 return;
             }
 

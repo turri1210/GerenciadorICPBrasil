@@ -7,13 +7,27 @@ namespace GerenciadorIcpBrasil.Services;
 internal static class AuthenticodeVerifier
 {
     private static readonly Guid GenericVerifyV2 = new("00AAC56B-CD44-11D0-8CC2-00C04FC295EE");
+    private const string RedeIcpBrasilThumbprint = "038406E8CB7700739D12CD73A911DF5E90DED643";
+    private const uint UntrustedRoot = 0x800B0109;
 
     public static void VerifyOfficialRelease(string filePath)
     {
-        var commonName = VerifyTrustedSignature(filePath);
-        if (!commonName.Equals("SignPath Foundation", StringComparison.OrdinalIgnoreCase))
+        var status = GetSignatureStatus(filePath);
+        // O certificado é autoassinado; a raiz pode não ser confiável no Windows.
+        // Qualquer outra falha da verificação Authenticode continua bloqueada.
+        if (status != 0 && status != UntrustedRoot)
         {
-            throw new InvalidOperationException($"Editor inesperado na atualização: {commonName}.");
+            throw new InvalidOperationException($"A assinatura Authenticode do instalador é inválida (0x{status:X8}).");
+        }
+
+        using var signer = new X509Certificate2(X509Certificate.CreateFromSignedFile(filePath));
+        if (!string.Equals(signer.Thumbprint, RedeIcpBrasilThumbprint, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("O instalador não foi assinado pelo certificado Rede ICP Brasil autorizado.");
+        }
+        if (DateTimeOffset.UtcNow < signer.NotBefore || DateTimeOffset.UtcNow > signer.NotAfter)
+        {
+            throw new InvalidOperationException("O certificado de assinatura do instalador está fora da validade.");
         }
 
         var versionInfo = FileVersionInfo.GetVersionInfo(filePath);
@@ -25,11 +39,32 @@ internal static class AuthenticodeVerifier
 
     public static string VerifyTrustedSignature(string filePath, IReadOnlyCollection<string>? expectedPublisherNames = null)
     {
+        var result = GetSignatureStatus(filePath);
+        if (result != 0)
+        {
+            throw new InvalidOperationException($"A assinatura Authenticode do arquivo é inválida (0x{result:X8}).");
+        }
+
+        using var signer = new X509Certificate2(X509Certificate.CreateFromSignedFile(filePath));
+        var commonName = signer.GetNameInfo(X509NameType.SimpleName, false);
+        if (expectedPublisherNames is not null &&
+            (expectedPublisherNames.Count == 0 ||
+             !expectedPublisherNames.Any(expected =>
+                 !string.IsNullOrWhiteSpace(expected) &&
+                 commonName.Contains(expected, StringComparison.OrdinalIgnoreCase))))
+        {
+            throw new InvalidOperationException($"Editor não autorizado para este pacote: {commonName}.");
+        }
+
+        return commonName;
+    }
+
+    private static uint GetSignatureStatus(string filePath)
+    {
         if (!File.Exists(filePath))
         {
             throw new FileNotFoundException("Arquivo para validação não encontrado.", filePath);
         }
-
         var fileInfo = new WinTrustFileInfo(filePath);
         var fileInfoPointer = Marshal.AllocHGlobal(Marshal.SizeOf<WinTrustFileInfo>());
         try
@@ -40,29 +75,13 @@ internal static class AuthenticodeVerifier
             try
             {
                 Marshal.StructureToPtr(trustData, trustDataPointer, false);
-                var result = WinVerifyTrust(IntPtr.Zero, GenericVerifyV2, trustDataPointer);
-                if (result != 0)
-                {
-                    throw new InvalidOperationException($"A assinatura Authenticode do arquivo é inválida (0x{result:X8}).");
-                }
+                return WinVerifyTrust(IntPtr.Zero, GenericVerifyV2, trustDataPointer);
             }
             finally
             {
                 Marshal.FreeHGlobal(trustDataPointer);
             }
 
-            using var signer = new X509Certificate2(X509Certificate.CreateFromSignedFile(filePath));
-            var commonName = signer.GetNameInfo(X509NameType.SimpleName, false);
-            if (expectedPublisherNames is not null &&
-                (expectedPublisherNames.Count == 0 ||
-                 !expectedPublisherNames.Any(expected =>
-                     !string.IsNullOrWhiteSpace(expected) &&
-                     commonName.Contains(expected, StringComparison.OrdinalIgnoreCase))))
-            {
-                throw new InvalidOperationException($"Editor não autorizado para este pacote: {commonName}.");
-            }
-
-            return commonName;
         }
         finally
         {
