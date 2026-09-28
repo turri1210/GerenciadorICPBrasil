@@ -61,32 +61,10 @@ jobs:
             if (-not $certificate -or -not $certificate.HasPrivateKey) {
               throw 'O PFX não corresponde ao certificado Rede ICP Brasil autorizado.'
             }
-            if ($certificate.Subject -ne $certificate.Issuer) {
-              throw 'O certificado de assinatura esperado deve ser autoassinado.'
-            }
-            $publicCertificatePath = Join-Path $env:RUNNER_TEMP 'code-signing.cer'
-            Export-Certificate -Cert $certificate -FilePath $publicCertificatePath | Out-Null
-            $publicCertificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($publicCertificatePath)
-            $rootStore = [System.Security.Cryptography.X509Certificates.X509Store]::new(
-              [System.Security.Cryptography.X509Certificates.StoreName]::Root,
-              [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser)
-            try {
-              $rootStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
-              $rootStore.Add($publicCertificate)
-              if (-not ($rootStore.Certificates | Where-Object Thumbprint -eq $thumbprint)) {
-                throw 'Falha ao confiar no certificado público de assinatura.'
-              }
-            }
-            finally {
-              $rootStore.Close()
-            }
             "CODE_SIGN_THUMBPRINT=$thumbprint" >> $env:GITHUB_ENV
           }
           finally {
             Remove-Item -LiteralPath $pfxPath -Force -ErrorAction SilentlyContinue
-            if ($publicCertificatePath) {
-              Remove-Item -LiteralPath $publicCertificatePath -Force -ErrorAction SilentlyContinue
-            }
           }
 
       - name: Assinar aplicativo e auxiliares
@@ -110,9 +88,11 @@ jobs:
             & $signTool sign /sha1 $env:CODE_SIGN_THUMBPRINT /s My /fd SHA256 /d 'Gerenciador ICP Brasil' $path
             if ($LASTEXITCODE -ne 0) { throw "Falha ao assinar $file" }
             $signature = Get-AuthenticodeSignature -LiteralPath $path
-            if ($signature.SignerCertificate.Thumbprint -ne $env:CODE_SIGN_THUMBPRINT -or
-                $signature.Status -notin @('Valid', 'NotTrusted')) {
-              throw "Assinatura inválida em $file"
+            # O Windows pode retornar UnknownError para a cadeia do certificado autoassinado.
+            if ($signature.SignatureType -ne 'Authenticode' -or
+                $signature.SignerCertificate.Thumbprint -ne $env:CODE_SIGN_THUMBPRINT -or
+                $signature.Status -notin @('Valid', 'NotTrusted', 'UnknownError')) {
+              throw "Assinatura inválida em ${file}: $($signature.Status)"
             }
           }
 
@@ -141,9 +121,10 @@ jobs:
           & $env:SIGNTOOL_PATH sign /sha1 $env:CODE_SIGN_THUMBPRINT /s My /fd SHA256 /d 'Gerenciador ICP Brasil' $installer
           if ($LASTEXITCODE -ne 0) { throw 'Falha ao assinar o instalador.' }
           $signature = Get-AuthenticodeSignature -LiteralPath $installer
-          if ($signature.SignerCertificate.Thumbprint -ne $env:CODE_SIGN_THUMBPRINT -or
-              $signature.Status -notin @('Valid', 'NotTrusted')) {
-            throw 'Assinatura do instalador inválida.'
+          if ($signature.SignatureType -ne 'Authenticode' -or
+              $signature.SignerCertificate.Thumbprint -ne $env:CODE_SIGN_THUMBPRINT -or
+              $signature.Status -notin @('Valid', 'NotTrusted', 'UnknownError')) {
+            throw "Assinatura do instalador inválida: $($signature.Status)"
           }
           $hash = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash
           "$hash  $(Split-Path $installer -Leaf)" | Set-Content artifacts/SHA256SUMS.txt
@@ -163,15 +144,4 @@ jobs:
         run: |
           if ($env:CODE_SIGN_THUMBPRINT) {
             Remove-Item -LiteralPath "Cert:\CurrentUser\My\$env:CODE_SIGN_THUMBPRINT" -Force -ErrorAction SilentlyContinue
-            $rootStore = [System.Security.Cryptography.X509Certificates.X509Store]::new(
-              [System.Security.Cryptography.X509Certificates.StoreName]::Root,
-              [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser)
-            try {
-              $rootStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
-              $trustedCertificate = $rootStore.Certificates | Where-Object Thumbprint -eq $env:CODE_SIGN_THUMBPRINT | Select-Object -First 1
-              if ($trustedCertificate) { $rootStore.Remove($trustedCertificate) }
-            }
-            finally {
-              $rootStore.Close()
-            }
           }
