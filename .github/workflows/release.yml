@@ -60,10 +60,22 @@ jobs:
             if (-not $certificate -or -not $certificate.HasPrivateKey) {
               throw 'O PFX não corresponde ao certificado Rede ICP Brasil autorizado.'
             }
+            if ($certificate.Subject -ne $certificate.Issuer) {
+              throw 'O certificado de assinatura esperado deve ser autoassinado.'
+            }
+            $publicCertificatePath = Join-Path $env:RUNNER_TEMP 'code-signing.cer'
+            Export-Certificate -Cert $certificate -FilePath $publicCertificatePath | Out-Null
+            $trustedCertificate = Import-Certificate -FilePath $publicCertificatePath -CertStoreLocation Cert:\CurrentUser\Root
+            if ($trustedCertificate.Thumbprint -ne $thumbprint) {
+              throw 'Falha ao confiar no certificado público de assinatura.'
+            }
             "CODE_SIGN_THUMBPRINT=$thumbprint" >> $env:GITHUB_ENV
           }
           finally {
             Remove-Item -LiteralPath $pfxPath -Force -ErrorAction SilentlyContinue
+            if ($publicCertificatePath) {
+              Remove-Item -LiteralPath $publicCertificatePath -Force -ErrorAction SilentlyContinue
+            }
           }
 
       - name: Assinar aplicativo e auxiliares
@@ -132,4 +144,5 @@ jobs:
         run: |
           if ($env:CODE_SIGN_THUMBPRINT) {
             Remove-Item -LiteralPath "Cert:\CurrentUser\My\$env:CODE_SIGN_THUMBPRINT" -Force -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath "Cert:\CurrentUser\Root\$env:CODE_SIGN_THUMBPRINT" -Force -ErrorAction SilentlyContinue
           }
