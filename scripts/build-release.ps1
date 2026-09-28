@@ -34,6 +34,8 @@ dotnet publish (Join-Path $repositoryRoot 'GerenciadorIcpBrasil.csproj') `
     --no-restore `
     -p:WindowsAppSDKSelfContained=true `
     -p:Version=$Version `
+    -p:VersionPrefix=$Version `
+    -p:InformationalVersion=$Version `
     -p:AssemblyVersion="$Version.0" `
     -p:FileVersion="$Version.0" `
     -p:PublishDir="$outputPath\"
@@ -45,6 +47,8 @@ dotnet publish (Join-Path $repositoryRoot 'Helpers\ElevatedConfiguration\ConfigA
     --self-contained true `
     --no-restore `
     -p:Version=$Version `
+    -p:VersionPrefix=$Version `
+    -p:InformationalVersion=$Version `
     -p:AssemblyVersion="$Version.0" `
     -p:FileVersion="$Version.0" `
     -p:PublishDir="$outputPath\Helpers\ElevatedConfiguration\"
@@ -56,6 +60,8 @@ dotnet publish (Join-Path $repositoryRoot 'Helpers\CertificateSelector\CertSelec
     --self-contained true `
     --no-restore `
     -p:Version=$Version `
+    -p:VersionPrefix=$Version `
+    -p:InformationalVersion=$Version `
     -p:AssemblyVersion="$Version.0" `
     -p:FileVersion="$Version.0" `
     -p:PublishDir="$outputPath\Helpers\CertificateSelector\"
