@@ -96,9 +96,13 @@ jobs:
             }
           }
 
-      - name: Instalar Inno Setup fixado
+      - name: Validar Inno Setup do runner
         shell: pwsh
-        run: choco install innosetup --version=6.4.3 --allow-downgrade --yes --no-progress
+        run: |
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path -LiteralPath $iscc -PathType Leaf)) { throw 'Inno Setup não encontrado no runner.' }
+          $version = (Get-Item -LiteralPath $iscc).VersionInfo.FileVersion
+          Write-Host "Inno Setup: $version"
 
       - name: Compilar instalador
         shell: pwsh
